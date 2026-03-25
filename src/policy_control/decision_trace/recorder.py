@@ -29,7 +29,7 @@ class DecisionRecorder:
         self,
         thread_id: UUID,
         action_run_id: Optional[UUID] = None,
-    ) -&gt; DecisionTrace:
+    ) -> DecisionTrace:
         """
         开始记录决策追踪
 
@@ -119,7 +119,7 @@ class DecisionRecorder:
         policy_hits: Optional[List[Dict]] = None,
         risk_assessment_id: Optional[UUID] = None,
         kill_switch_affected: bool = False,
-    ) -&gt; DecisionTrace:
+    ) -> DecisionTrace:
         """
         完成决策追踪记录
 
@@ -142,11 +142,11 @@ class DecisionRecorder:
 
         return trace
 
-    def get_trace(self, trace_id: UUID) -&gt; Optional[DecisionTrace]:
+    def get_trace(self, trace_id: UUID) -> Optional[DecisionTrace]:
         """获取决策追踪"""
         return self._traces.get(trace_id)
 
-    def get_traces_for_thread(self, thread_id: UUID, limit: int = 100) -&gt; List[DecisionTrace]:
+    def get_traces_for_thread(self, thread_id: UUID, limit: int = 100) -> List[DecisionTrace]:
         """获取线程的所有决策追踪"""
         trace_ids = self._thread_traces.get(thread_id, [])
         traces = [self._traces.get(tid) for tid in trace_ids if tid in self._traces]
@@ -163,7 +163,7 @@ class DecisionRecorder:
         policy_hits: Optional[List[Dict]] = None,
         risk_assessment_id: Optional[UUID] = None,
         kill_switch_affected: bool = False,
-    ) -&gt; DecisionTrace:
+    ) -> DecisionTrace:
         """
         记录完整的8步决策链
 

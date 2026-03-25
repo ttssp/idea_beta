@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Controller
+Policy & Control Controller
 
 主控制器：整合所有模块，提供统一的8步决策链接口
 """
@@ -80,7 +80,7 @@ class PolicyControlController:
         thread_objective: Optional[str] = None,
         thread_status: Optional[str] = None,
         action_run_id: Optional[UUID] = None,
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         8步决策链主入口
 
@@ -205,12 +205,12 @@ class PolicyControlController:
                     "policy_reason": policy_decision.reason,
                 }
                 self.decision_recorder.record_step_sync(
-                    trace, 4, "Policy &amp; Budget Check",
+                    trace, 4, "Policy & Budget Check",
                     policy_decision.reason,
                     output_data=step4b_output,
                 )
                 step_data.append({
-                    "name": "Policy &amp; Budget Check",
+                    "name": "Policy & Budget Check",
                     "description": policy_decision.reason,
                     "output": step4b_output,
                 })
@@ -304,12 +304,12 @@ class PolicyControlController:
         policy_decision: Decision,
         risk_decision: Decision,
         profile_level: Any,
-    ) -&gt; Decision:
+    ) -> Decision:
         """
         合成最终决策
 
         策略：最保守优先
-        DENY &gt; ESCALATE_TO_HUMAN &gt; REQUIRE_APPROVAL &gt; DRAFT_ONLY &gt; BOUNDED_EXECUTION &gt; ALLOW
+        DENY > ESCALATE_TO_HUMAN > REQUIRE_APPROVAL > DRAFT_ONLY > BOUNDED_EXECUTION > ALLOW
         """
         priority_order = [
             Decision.DENY,

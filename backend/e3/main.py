@@ -1,6 +1,6 @@
 
 """
-E3: Integration &amp; Action API - Main Application
+E3: Integration & Action API - Main Application
 """
 
 from fastapi import FastAPI

@@ -2,10 +2,11 @@
   "name": "agent-comm-control",
   "version": "0.1.0",
   "private": true,
+  "description": "代理原生通信控制层",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "start",
+    "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
@@ -14,7 +15,12 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "e5:dev": "tsx watch src/e5/api/app.ts",
+    "e5:build": "tsc -p tsconfig.e5.json",
+    "e5:start": "node dist/e5/api/app.js",
+    "e5:test": "vitest --config vitest.e5.config.ts",
+    "e5:typecheck": "tsc --noEmit -p tsconfig.e5.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -47,7 +53,17 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8",
-    "zustand": "^5.0.0-rc.2"
+    "zustand": "^5.0.0-rc.2",
+    "@sinclair/typebox": "^0.32.0",
+    "@langchain/core": "^0.1.0",
+    "@langchain/openai": "^0.0.0",
+    "fastify": "^4.25.0",
+    "fastify-type-provider-zod": "^1.1.9",
+    "winston": "^3.11.0",
+    "ioredis": "^5.3.0",
+    "openai": "^4.20.0",
+    "@anthropic-ai/sdk": "^0.18.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",
@@ -56,6 +72,7 @@
     "@types/node": "^22.7.4",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^9.0.0",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^2.1.1",
     "@vitest/ui": "^2.1.1",
@@ -74,7 +91,11 @@
     "prettier-plugin-tailwindcss": "^0.6.8",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.1",
+    "tsx": "^4.6.0",
+    "supertest": "^6.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -87,52 +108,4 @@
       "prettier --write"
     ]
   }
-  "name": "agent-comm-control-e5",
-  "version": "1.0.0",
-  "description": "E5 - AI/Agent Intelligence Layer for Agent-Native Communication Control",
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/e5/api/app.ts",
-    "build": "tsc",
-    "start": "node dist/e5/api/app.js",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit",
-    "setup": "bash scripts/setup.sh",
-    "health": "bash scripts/health-check.sh",
-    "docker:build": "docker build -f Dockerfile.e5 -t agent-comm-e5 .",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
-  },
-  "dependencies": {
-    "@sinclair/typebox": "^0.32.0",
-    "@langchain/core": "^0.1.0",
-    "@langchain/openai": "^0.0.0",
-    "fastify": "^4.25.0",
-    "zod": "^3.22.0",
-    "winston": "^3.11.0",
-    "ioredis": "^5.3.0",
-    "openai": "^4.20.0",
-    "@anthropic-ai/sdk": "^0.18.0",
-    "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@types/uuid": "^9.0.0",
-    "typescript": "^5.3.0",
-    "tsx": "^4.6.0",
-    "vitest": "^1.1.0",
-    "supertest": "^6.3.0",
-    "prettier": "^3.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
-    "eslint": "^8.55.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "author": "E5 - AI/Agent Engineer",
-  "license": "MIT"
 }

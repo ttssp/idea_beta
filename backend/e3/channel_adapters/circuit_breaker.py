@@ -50,16 +50,16 @@ class CircuitBreakerManager:
             'calendar': calendar_circuit
         }
 
-    def get_circuit(self, channel: str) -&gt; pybreaker.CircuitBreaker:
+    def get_circuit(self, channel: str) -> pybreaker.CircuitBreaker:
         """获取渠道对应的熔断器"""
         return self._circuits.get(channel, email_circuit)
 
-    def get_state(self, channel: str) -&gt; str:
+    def get_state(self, channel: str) -> str:
         """获取熔断器状态"""
         circuit = self.get_circuit(channel)
         return circuit.state.name
 
-    def is_open(self, channel: str) -&gt; bool:
+    def is_open(self, channel: str) -> bool:
         """检查熔断器是否打开"""
         circuit = self.get_circuit(channel)
         return circuit.state == pybreaker.CircuitBreaker.OPEN
@@ -74,7 +74,7 @@ class CircuitBreakerManager:
         circuit = self.get_circuit(channel)
         circuit.open()
 
-    def get_all_states(self) -&gt; dict[str, str]:
+    def get_all_states(self) -> dict[str, str]:
         """获取所有熔断器状态"""
         return {
             channel: circuit.state.name
@@ -86,7 +86,7 @@ class CircuitBreakerManager:
 circuit_manager = CircuitBreakerManager()
 
 
-def email_adapter_exception_handler(func: Callable) -&gt; Callable:
+def email_adapter_exception_handler(func: Callable) -> Callable:
     """
     Email适配器异常处理装饰器
 
@@ -94,7 +94,7 @@ def email_adapter_exception_handler(func: Callable) -&gt; Callable:
     """
     @wraps(func)
     @email_circuit
-    async def wrapper(*args, **kwargs) -&gt; Any:
+    async def wrapper(*args, **kwargs) -> Any:
         try:
             return await func(*args, **kwargs)
         except pybreaker.CircuitBreakerError:
@@ -117,13 +117,13 @@ def email_adapter_exception_handler(func: Callable) -&gt; Callable:
     return wrapper
 
 
-def calendar_adapter_exception_handler(func: Callable) -&gt; Callable:
+def calendar_adapter_exception_handler(func: Callable) -> Callable:
     """
     Calendar适配器异常处理装饰器
     """
     @wraps(func)
     @calendar_circuit
-    async def wrapper(*args, **kwargs) -&gt; Any:
+    async def wrapper(*args, **kwargs) -> Any:
         try:
             return await func(*args, **kwargs)
         except pybreaker.CircuitBreakerError:
@@ -143,7 +143,7 @@ def calendar_adapter_exception_handler(func: Callable) -&gt; Callable:
     return wrapper
 
 
-def is_retryable_email_error(error: Exception) -&gt; bool:
+def is_retryable_email_error(error: Exception) -> bool:
     """
     判断Email错误是否可重试
     """
@@ -171,7 +171,7 @@ def is_retryable_email_error(error: Exception) -&gt; bool:
     return False
 
 
-def is_retryable_calendar_error(error: Exception) -&gt; bool:
+def is_retryable_calendar_error(error: Exception) -> bool:
     """
     判断Calendar错误是否可重试
     """
@@ -179,7 +179,7 @@ def is_retryable_calendar_error(error: Exception) -&gt; bool:
     return is_retryable_email_error(error)
 
 
-def get_circuit_metrics() -&gt; dict[str, Any]:
+def get_circuit_metrics() -> dict[str, Any]:
     """
     获取熔断器指标（用于监控）
     """

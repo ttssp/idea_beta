@@ -4,18 +4,35 @@
 
 import { randomUUID } from 'crypto';
 import Fastify from 'fastify';
+import {
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from 'fastify-type-provider-zod';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import { promptLibrary } from '../prompts/library.js';
+import { ErrorResponseSchema } from './schemas.js';
 import plannerRoutes from './routes/planner.js';
 import drafterRoutes from './routes/drafter.js';
 import riskRoutes from './routes/risk.js';
+import summaryRoutes from './routes/summary.js';
 
 export async function createApp(): Promise<Fastify.FastifyInstance> {
   const fastify = Fastify({
     logger: false,
     disableRequestLogging: true,
     genReqId: () => randomUUID(),
+  }).withTypeProvider<ZodTypeProvider>();
+
+  // 注册 Zod 验证器和序列化器
+  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setSerializerCompiler(serializerCompiler);
+
+  // 注册共享 schema
+  fastify.addSchema({
+    $id: 'ErrorResponseSchema',
+    ...ErrorResponseSchema.shape,
   });
 
   fastify.addHook('onRequest', (request, reply, done) => {
@@ -69,6 +86,7 @@ export async function createApp(): Promise<Fastify.FastifyInstance> {
   await fastify.register(plannerRoutes, { prefix: '/ai' });
   await fastify.register(drafterRoutes, { prefix: '/ai' });
   await fastify.register(riskRoutes, { prefix: '/ai' });
+  await fastify.register(summaryRoutes, { prefix: '/ai' });
 
   return fastify;
 }

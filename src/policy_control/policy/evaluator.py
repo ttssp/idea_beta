@@ -33,7 +33,7 @@ class PolicyEvaluator:
         context: PolicyContext,
         thread_id: Optional[UUID] = None,
         relationship_id: Optional[UUID] = None,
-    ) -&gt; PolicyDecision:
+    ) -> PolicyDecision:
         """
         完整的策略评估
 
@@ -110,7 +110,7 @@ class PolicyEvaluator:
         self,
         decision: Decision,
         profile_level: DelegationLevel,
-    ) -&gt; Decision:
+    ) -> Decision:
         """
         根据委托档位调整决策
 

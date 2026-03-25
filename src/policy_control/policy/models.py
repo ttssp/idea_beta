@@ -28,7 +28,7 @@ class PolicyRule:
     updated_at: datetime = field(default_factory=datetime.utcnow)
     created_by: Optional[UUID] = None
 
-    def matches(self, context: Dict[str, Any]) -&gt; bool:
+    def matches(self, context: Dict[str, Any]) -> bool:
         """
         检查规则是否匹配上下文
 
@@ -59,10 +59,10 @@ class PolicyRule:
                     if condition["contains"] not in str(value):
                         return False
                 elif "greater_than" in condition:
-                    if context.get(key, 0) &lt;= condition["greater_than"]:
+                    if context.get(key, 0) <= condition["greater_than"]:
                         return False
                 elif "less_than" in condition:
-                    if context.get(key, float("inf")) &gt;= condition["less_than"]:
+                    if context.get(key, float("inf")) >= condition["less_than"]:
                         return False
             else:
                 # 简单相等匹配

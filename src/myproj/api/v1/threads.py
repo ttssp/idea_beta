@@ -13,17 +13,19 @@ from myproj.core.domain.thread import (
     Thread,
     ThreadId,
     ThreadStatus,
+    ThreadObjective,
     DelegationProfile,
     DelegationLevel,
     RiskLevel,
 )
-from myproj.core.services.thread_service import ThreadService
+from myproj.core.repositories.thread_repository import ThreadRepository
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 
 # ============================================
 # Pydantic Schemas
 # ============================================
+
 
 class ThreadObjectiveSchema(BaseModel):
     """Thread目标"""
@@ -120,15 +122,9 @@ class ThreadListResponseSchema(BaseModel):
 
 
 # ============================================
-# 内存服务（临时，后续替换为数据库仓储）
+# API 端点 - 使用数据库仓储
 # ============================================
 
-_thread_service = ThreadService()
-
-
-# ============================================
-# API 端点
-# ============================================
 
 @router.post(
     "",
@@ -138,8 +134,11 @@ _thread_service = ThreadService()
 )
 async def create_thread(
     data: ThreadCreateSchema,
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """创建新的Thread"""
+    """创建新的Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+
     delegation_profile = None
     if data.delegation_profile:
         delegation_profile = DelegationProfile(
@@ -152,17 +151,23 @@ async def create_thread(
             escalation_rules=data.delegation_profile.escalation_rules,
         )
 
-    thread, _ = _thread_service.create_thread(
-        title=data.objective.title,
+    thread = Thread(
+        id=ThreadId.generate(),
+        objective=ThreadObjective(
+            title=data.objective.title,
+            description=data.objective.description,
+            due_at=data.objective.due_at,
+        ),
         owner_id=data.owner_id,
-        description=data.objective.description,
-        due_at=data.objective.due_at,
-        delegation_profile=delegation_profile,
+        delegation_profile=delegation_profile or DelegationProfile.default_observe(),
         participant_ids=data.participant_ids,
         tags=data.tags,
+        status=ThreadStatus.NEW,
+        risk_level=RiskLevel.LOW,
     )
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.get(
@@ -176,21 +181,23 @@ async def list_threads(
     risk_level: Optional[List[RiskLevel]] = Query(None, description="风险等级过滤"),
     tags: Optional[List[str]] = Query(None, description="标签过滤"),
     pagination: Pagination = Depends(),
+    db: DbSession = Depends(),
 ) -> ThreadListResponseSchema:
-    """查询Thread列表，支持过滤和分页"""
-    threads = _thread_service.list_threads(
-        owner_id=owner_id,
-        statuses=status,
-        risk_levels=risk_level,
-        tags=tags,
-        limit=pagination.limit,
-        offset=pagination.offset,
-    )
+    """查询Thread列表，支持过滤和分页 - 使用数据库仓储"""
+    repo = ThreadRepository(db)
 
-    total = _thread_service.count_threads(
-        owner_id=owner_id,
-        statuses=status,
-    )
+    if owner_id:
+        threads = repo.find_by_owner(
+            owner_id=owner_id,
+            statuses=status,
+            risk_levels=risk_level,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        )
+        total = repo.count_by_owner(owner_id=owner_id, statuses=status)
+    else:
+        threads = repo.list(offset=pagination.offset, limit=pagination.limit)
+        total = repo.count()
 
     return ThreadListResponseSchema(
         items=[ThreadResponseSchema.from_domain(t) for t in threads],
@@ -207,9 +214,12 @@ async def list_threads(
 )
 async def get_thread(
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """获取Thread详情"""
-    thread = _thread_service.get_thread_by_uuid(thread_id)
+    """获取Thread详情 - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
     if not thread:
         raise NotFoundError(f"Thread not found: {thread_id}")
 
@@ -224,9 +234,12 @@ async def get_thread(
 async def update_thread(
     data: ThreadUpdateSchema,
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """更新Thread"""
-    thread = _thread_service.get_thread_by_uuid(thread_id)
+    """更新Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
     if not thread:
         raise NotFoundError(f"Thread not found: {thread_id}")
 
@@ -235,8 +248,7 @@ async def update_thread(
 
     # 更新目标
     if data.objective:
-        _thread_service.update_objective(
-            ThreadId(value=thread_id),
+        thread.objective = ThreadObjective(
             title=data.objective.title,
             description=data.objective.description,
             due_at=data.objective.due_at,
@@ -244,22 +256,15 @@ async def update_thread(
 
     # 更新摘要
     if data.summary is not None:
-        _thread_service.update_summary(
-            ThreadId(value=thread_id),
-            data.summary,
-        )
+        thread.update_summary(data.summary)
 
     # 更新风险等级
     if data.risk_level:
-        _thread_service.update_risk_level(
-            ThreadId(value=thread_id),
-            data.risk_level,
-            "Updated via API",
-        )
+        thread.risk_level = data.risk_level
 
     # 更新委托档位
     if data.delegation_profile:
-        profile = DelegationProfile(
+        thread.delegation_profile = DelegationProfile(
             profile_name=data.delegation_profile.profile_name,
             level=data.delegation_profile.level,
             max_actions_per_hour=data.delegation_profile.max_actions_per_hour,
@@ -268,28 +273,17 @@ async def update_thread(
             allowed_actions=data.delegation_profile.allowed_actions,
             escalation_rules=data.delegation_profile.escalation_rules,
         )
-        _thread_service.update_delegation_profile(
-            ThreadId(value=thread_id),
-            profile,
-        )
 
     # 添加参与者
     for pid in data.add_participant_ids:
-        _thread_service.add_participant(
-            ThreadId(value=thread_id),
-            pid,
-        )
+        thread.add_participant(pid)
 
     # 移除参与者
     for pid in data.remove_participant_ids:
-        _thread_service.remove_participant(
-            ThreadId(value=thread_id),
-            pid,
-        )
+        thread.remove_participant(pid)
 
-    thread = _thread_service.get_thread_by_uuid(thread_id)
-    assert thread is not None
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.post(
@@ -299,14 +293,22 @@ async def update_thread(
 )
 async def pause_thread(
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """暂停Thread"""
+    """暂停Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
+    if not thread:
+        raise NotFoundError(f"Thread not found: {thread_id}")
+
     try:
-        thread, _ = _thread_service.pause(ThreadId(value=thread_id))
+        thread.pause()
     except ValueError as e:
         raise StateTransitionError(str(e)) from e
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.post(
@@ -316,14 +318,22 @@ async def pause_thread(
 )
 async def resume_thread(
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """恢复Thread"""
+    """恢复Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
+    if not thread:
+        raise NotFoundError(f"Thread not found: {thread_id}")
+
     try:
-        thread, _ = _thread_service.resume(ThreadId(value=thread_id))
+        thread.resume()
     except ValueError as e:
         raise StateTransitionError(str(e)) from e
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.post(
@@ -334,17 +344,22 @@ async def resume_thread(
 async def takeover_thread(
     reason: str = Body(..., embed=True, min_length=1),
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """接管Thread - 升级到人工主导"""
+    """接管Thread - 升级到人工主导 - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
+    if not thread:
+        raise NotFoundError(f"Thread not found: {thread_id}")
+
     try:
-        thread, _ = _thread_service.escalate(
-            ThreadId(value=thread_id),
-            reason,
-        )
+        thread.escalate(reason)
     except ValueError as e:
         raise StateTransitionError(str(e)) from e
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.post(
@@ -354,14 +369,22 @@ async def takeover_thread(
 )
 async def complete_thread(
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """完成Thread"""
+    """完成Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
+    if not thread:
+        raise NotFoundError(f"Thread not found: {thread_id}")
+
     try:
-        thread, _ = _thread_service.complete(ThreadId(value=thread_id))
+        thread.complete()
     except ValueError as e:
         raise StateTransitionError(str(e)) from e
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)
 
 
 @router.post(
@@ -372,14 +395,19 @@ async def complete_thread(
 async def cancel_thread(
     reason: Optional[str] = Body(None, embed=True),
     thread_id: UUID = Depends(get_thread_id),
+    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
-    """取消Thread"""
+    """取消Thread - 使用数据库仓储"""
+    repo = ThreadRepository(db)
+    thread = repo.get_by_uuid(thread_id)
+
+    if not thread:
+        raise NotFoundError(f"Thread not found: {thread_id}")
+
     try:
-        thread, _ = _thread_service.cancel(
-            ThreadId(value=thread_id),
-            reason,
-        )
+        thread.cancel()
     except ValueError as e:
         raise StateTransitionError(str(e)) from e
 
-    return ThreadResponseSchema.from_domain(thread)
+    saved = repo.save(thread)
+    return ThreadResponseSchema.from_domain(saved)

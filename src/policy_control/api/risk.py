@@ -37,7 +37,7 @@ class RiskAPI:
     def evaluate_risk(
         self,
         request: RiskEvaluationRequest,
-    ) -&gt; RiskDecision:
+    ) -> RiskDecision:
         """
         POST /risk/evaluate
 

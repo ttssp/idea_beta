@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Common Module
+Policy & Control Common Module
 """
 from .constants import (
     DelegationLevel,

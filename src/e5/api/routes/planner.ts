@@ -21,7 +21,7 @@ import { config } from '../../config/index.js';
 export async function plannerRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{
     Body: PlanRequest;
-    Reply: PlanResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: PlanResponse;
   }>(
     '/plan',
     {
@@ -29,7 +29,6 @@ export async function plannerRoutes(fastify: FastifyInstance): Promise<void> {
         body: PlanRequestSchema,
         response: {
           200: PlanResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },
@@ -66,21 +65,14 @@ export async function plannerRoutes(fastify: FastifyInstance): Promise<void> {
           requestId,
           error,
         });
-
-        return reply.status(500).send({
-          error: {
-            code: 'PLANNING_FAILED',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          },
-          requestId,
-        });
+        throw error;
       }
     }
   );
 
   fastify.post<{
     Body: SuggestNextRequest;
-    Reply: SuggestNextResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: SuggestNextResponse;
   }>(
     '/suggest-next',
     {
@@ -88,7 +80,6 @@ export async function plannerRoutes(fastify: FastifyInstance): Promise<void> {
         body: SuggestNextRequestSchema,
         response: {
           200: SuggestNextResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },
@@ -122,14 +113,7 @@ export async function plannerRoutes(fastify: FastifyInstance): Promise<void> {
           requestId,
           error,
         });
-
-        return reply.status(500).send({
-          error: {
-            code: 'SUGGESTION_FAILED',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          },
-          requestId,
-        });
+        throw error;
       }
     }
   );

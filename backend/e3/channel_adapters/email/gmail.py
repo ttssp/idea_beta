@@ -55,7 +55,7 @@ class GmailAdapter(ChannelAdapter):
         self,
         payload: Dict[str, Any],
         idempotency_key: str
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         发送邮件
 
@@ -66,8 +66,8 @@ class GmailAdapter(ChannelAdapter):
                     "cc": ["cc@example.com"],
                     "subject": "Subject",
                     "body": "Email body",
-                    "in_reply_to": "&lt;message-id@example.com&gt;",
-                    "references": "&lt;message-id@example.com&gt;",
+                    "in_reply_to": "<message-id@example.com>",
+                    "references": "<message-id@example.com>",
                     "thread_id": "gmail-thread-id"
                 }
             idempotency_key: 幂等键
@@ -137,7 +137,7 @@ class GmailAdapter(ChannelAdapter):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -&gt; Optional[ChannelMessage]:
+    ) -> Optional[ChannelMessage]:
         """
         获取单条消息
 
@@ -168,7 +168,7 @@ class GmailAdapter(ChannelAdapter):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -&gt; List[ChannelMessage]:
+    ) -> List[ChannelMessage]:
         """
         获取线程内所有消息
 
@@ -212,7 +212,7 @@ class GmailAdapter(ChannelAdapter):
     async def get_external_thread_key(
         self,
         message: ChannelMessage
-    ) -&gt; str:
+    ) -> str:
         """
         从消息中提取线程Key
 
@@ -230,7 +230,7 @@ class GmailAdapter(ChannelAdapter):
         payload: bytes,
         signature_header: str,
         timestamp_header: str
-    ) -&gt; bool:
+    ) -> bool:
         """
         验证Webhook签名
 
@@ -245,7 +245,7 @@ class GmailAdapter(ChannelAdapter):
         logger.warning("Gmail webhook signature validation is simplified in dev mode")
         return True
 
-    def _parse_message(self, msg: Dict[str, Any]) -&gt; Optional[ChannelMessage]:
+    def _parse_message(self, msg: Dict[str, Any]) -> Optional[ChannelMessage]:
         """
         解析Gmail API返回的消息
 
@@ -258,7 +258,7 @@ class GmailAdapter(ChannelAdapter):
         payload = msg.get('payload', {})
         headers = payload.get('headers', [])
 
-        def get_header(name: str) -&gt; Optional[str]:
+        def get_header(name: str) -> Optional[str]:
             for h in headers:
                 if h.get('name', '').lower() == name.lower():
                     return h.get('value')
@@ -309,7 +309,7 @@ class GmailAdapter(ChannelAdapter):
             references=get_header('References')
         )
 
-    def _is_retryable_error(self, error: Exception) -&gt; bool:
+    def _is_retryable_error(self, error: Exception) -> bool:
         """
         判断错误是否可重试
 

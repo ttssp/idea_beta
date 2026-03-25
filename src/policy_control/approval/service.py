@@ -38,7 +38,7 @@ class ApprovalService:
         preview: Optional[Dict[str, Any]] = None,
         timeout_hours: int = 24,
         timeout_action: TimeoutAction = TimeoutAction.ESCALATE,
-    ) -&gt; ApprovalRequest:
+    ) -> ApprovalRequest:
         """
         创建审批请求
 
@@ -73,7 +73,7 @@ class ApprovalService:
         self._requests[request.id] = request
         return request
 
-    def get_request(self, request_id: UUID) -&gt; Optional[ApprovalRequest]:
+    def get_request(self, request_id: UUID) -> Optional[ApprovalRequest]:
         """获取审批请求"""
         return self._requests.get(request_id)
 
@@ -83,7 +83,7 @@ class ApprovalService:
         status: Optional[ApprovalStatus] = None,
         approver_principal_id: Optional[UUID] = None,
         limit: int = 100,
-    ) -&gt; List[ApprovalRequest]:
+    ) -> List[ApprovalRequest]:
         """
         列出审批请求
 
@@ -116,7 +116,7 @@ class ApprovalService:
         self,
         request_id: UUID,
         resolution: ApprovalResolution,
-    ) -&gt; ApprovalRequest:
+    ) -> ApprovalRequest:
         """
         审批操作
 
@@ -174,7 +174,7 @@ class ApprovalService:
 
         return request
 
-    def cancel(self, request_id: UUID, reason: Optional[str] = None) -&gt; ApprovalRequest:
+    def cancel(self, request_id: UUID, reason: Optional[str] = None) -> ApprovalRequest:
         """取消审批请求"""
         request = self._requests.get(request_id)
         if not request:
@@ -193,7 +193,7 @@ class ApprovalService:
 
         return request
 
-    def process_timeouts(self) -&gt; List[ApprovalRequest]:
+    def process_timeouts(self) -> List[ApprovalRequest]:
         """
         处理超时审批
 
@@ -240,7 +240,7 @@ class ApprovalService:
         action: str,
         resolved_by: UUID,
         reason: Optional[str] = None,
-    ) -&gt; List[ApprovalRequest]:
+    ) -> List[ApprovalRequest]:
         """
         批量审批操作
 

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """应用配置"""
 
     # API
-    api_title: str = "E3: Integration &amp; Action API"
+    api_title: str = "E3: Integration & Action API"
     api_version: str = "v1"
     api_prefix: str = "/api/v1"
 
@@ -59,7 +59,7 @@ class Settings(BaseSettings):
 
 
 @lru_cache()
-def get_settings() -&gt; Settings:
+def get_settings() -> Settings:
     """获取配置单例"""
     return Settings()
 

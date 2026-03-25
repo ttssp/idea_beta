@@ -40,7 +40,7 @@ class InboxProcessor:
         raw_payload: Optional[bytes] = None,
         webhook_signature: Optional[str] = None,
         webhook_timestamp: Optional[datetime] = None,
-    ) -&gt; Tuple[InboxEvent, bool]:
+    ) -> Tuple[InboxEvent, bool]:
         """
         接收外部事件，写入Inbox
 
@@ -103,7 +103,7 @@ class InboxProcessor:
 
         return event, True
 
-    async def mark_processing(self, event_id: UUID) -&gt; Optional[InboxEvent]:
+    async def mark_processing(self, event_id: UUID) -> Optional[InboxEvent]:
         """标记事件为处理中"""
         result = await self.db.execute(
             select(InboxEvent)
@@ -124,7 +124,7 @@ class InboxProcessor:
         self,
         event_id: UUID,
         resolved_thread_id: Optional[UUID] = None
-    ) -&gt; InboxEvent:
+    ) -> InboxEvent:
         """标记事件为已处理"""
         result = await self.db.execute(
             select(InboxEvent).where(InboxEvent.id == event_id)
@@ -141,7 +141,7 @@ class InboxProcessor:
         self,
         event_id: UUID,
         error_message: str
-    ) -&gt; InboxEvent:
+    ) -> InboxEvent:
         """标记事件为失败"""
         result = await self.db.execute(
             select(InboxEvent).where(InboxEvent.id == event_id)
@@ -154,7 +154,7 @@ class InboxProcessor:
         await self.db.refresh(event)
         return event
 
-    async def mark_ignored(self, event_id: UUID) -&gt; InboxEvent:
+    async def mark_ignored(self, event_id: UUID) -> InboxEvent:
         """标记事件为忽略"""
         result = await self.db.execute(
             select(InboxEvent).where(InboxEvent.id == event_id)
@@ -170,7 +170,7 @@ class InboxProcessor:
         self,
         limit: int = 100,
         channel_type: Optional[str] = None
-    ) -&gt; list[InboxEvent]:
+    ) -> list[InboxEvent]:
         """获取待处理的事件"""
         query = (
             select(InboxEvent)
@@ -184,7 +184,7 @@ class InboxProcessor:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_inbox_event(self, event_id: UUID) -&gt; Optional[InboxEvent]:
+    async def get_inbox_event(self, event_id: UUID) -> Optional[InboxEvent]:
         """获取Inbox事件"""
         result = await self.db.execute(
             select(InboxEvent).where(InboxEvent.id == event_id)

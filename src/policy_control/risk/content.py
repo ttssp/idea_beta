@@ -80,7 +80,7 @@ class ContentRiskEvaluator:
     def evaluate(
         self,
         content: Optional[str] = None,
-    ) -&gt; RiskEvaluationResult:
+    ) -> RiskEvaluationResult:
         """
         评估内容风险
 
@@ -125,18 +125,18 @@ class ContentRiskEvaluator:
             risk_score=risk_score,
             risk_level=risk_level,
             risk_factors=risk_factors,
-            reason=f"Content risk -&gt; {risk_level.value} (factors: {len(risk_factors)})",
+            reason=f"Content risk -> {risk_level.value} (factors: {len(risk_factors)})",
         )
 
-    def _score_to_level(self, score: int) -&gt; RiskLevel:
+    def _score_to_level(self, score: int) -> RiskLevel:
         """将风险分数转换为风险等级"""
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 2:
+        elif score <= 2:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL

@@ -1,13 +1,13 @@
 
 """
-E2 Policy &amp; Control Module - Complete Working Implementation
+E2 Policy & Control Module - Complete Working Implementation
 
 This is a fully functional implementation of the E2 module
 for the Agent-Native Communication Control Layer.
 """
 
 # ============================================================================
-# Imports &amp; Setup
+# Imports & Setup
 # ============================================================================
 
 from dataclasses import dataclass, field
@@ -342,11 +342,11 @@ class DelegationService:
         self,
         thread_id: Optional[UUID] = None,
         relationship_id: Optional[UUID] = None,
-    ) -&gt; DelegationProfile:
+    ) -> DelegationProfile:
         """
         获取有效委托档位
 
-        优先级：Thread &gt; Relationship &gt; System Default (Observe Only)
+        优先级：Thread > Relationship > System Default (Observe Only)
         """
         if thread_id and thread_id in self._thread_bindings:
             profile_id = self._thread_bindings[thread_id]
@@ -408,7 +408,7 @@ class ApprovalService:
         action_run_id: Optional[UUID] = None,
         approver_principal_id: Optional[UUID] = None,
         preview: Optional[Dict] = None,
-    ) -&gt; ApprovalRequest:
+    ) -> ApprovalRequest:
         """创建审批请求"""
         request = ApprovalRequest(
             thread_id=thread_id,
@@ -424,7 +424,7 @@ class ApprovalService:
         self._requests[request.id] = request
         return request
 
-    def get_request(self, request_id: UUID) -&gt; Optional[ApprovalRequest]:
+    def get_request(self, request_id: UUID) -> Optional[ApprovalRequest]:
         """获取审批请求"""
         return self._requests.get(request_id)
 
@@ -433,7 +433,7 @@ class ApprovalService:
         thread_id: Optional[UUID] = None,
         status: Optional[ApprovalStatus] = None,
         limit: int = 100,
-    ) -&gt; List[ApprovalRequest]:
+    ) -> List[ApprovalRequest]:
         """列出审批请求"""
         requests = list(self._requests.values())
 
@@ -453,7 +453,7 @@ class ApprovalService:
         reason: Optional[str] = None,
         resolved_by: Optional[UUID] = None,
         modified_content: Optional[str] = None,
-    ) -&gt; Optional[ApprovalRequest]:
+    ) -> Optional[ApprovalRequest]:
         """审批操作"""
         request = self._requests.get(request_id)
         if not request or request.status != ApprovalStatus.PENDING:
@@ -501,7 +501,7 @@ class RiskEvaluator:
         content: Optional[str] = None,
         relationship_class: Optional[str] = None,
         action_type: Optional[str] = None,
-    ) -&gt; Dict:
+    ) -> Dict:
         """风险评估主入口"""
         rel_risk = self._evaluate_relationship(relationship_class)
         act_risk = self._evaluate_action(action_type)
@@ -516,11 +516,11 @@ class RiskEvaluator:
         recommendation = self._risk_to_decision(overall_level)
 
         risk_factors = []
-        if rel_risk &gt;= 4:
+        if rel_risk >= 4:
             risk_factors.append("relationship_high_risk")
-        if act_risk &gt;= 4:
+        if act_risk >= 4:
             risk_factors.append("action_high_risk")
-        if con_risk &gt;= 4:
+        if con_risk >= 4:
             risk_factors.append("content_high_risk")
 
         return {
@@ -533,7 +533,7 @@ class RiskEvaluator:
             "recommendation": recommendation,
         }
 
-    def _evaluate_relationship(self, rc: Optional[str]) -&gt; int:
+    def _evaluate_relationship(self, rc: Optional[str]) -> int:
         """关系风险评估"""
         if rc in ["family", "core_client", "executive"]:
             return 5
@@ -543,7 +543,7 @@ class RiskEvaluator:
             return 1
         return 3
 
-    def _evaluate_action(self, at: Optional[str]) -&gt; int:
+    def _evaluate_action(self, at: Optional[str]) -> int:
         """动作风险评估"""
         if at in ["make_payment", "sign_contract", "make_commitment"]:
             return 5
@@ -555,7 +555,7 @@ class RiskEvaluator:
             return 2
         return 3
 
-    def _evaluate_content(self, content: Optional[str]) -&gt; int:
+    def _evaluate_content(self, content: Optional[str]) -> int:
         """内容风险评估（关键词/模式匹配）"""
         if not content or not content.strip():
             return 1
@@ -569,22 +569,22 @@ class RiskEvaluator:
                 return 4
         return 1
 
-    def _evaluate_consequence(self, rel_risk: int, act_risk: int) -&gt; int:
+    def _evaluate_consequence(self, rel_risk: int, act_risk: int) -> int:
         """结果风险评估"""
         return max(rel_risk, act_risk)
 
-    def _score_to_level(self, score: int) -&gt; RiskLevel:
+    def _score_to_level(self, score: int) -> RiskLevel:
         """将风险分数转换为风险等级"""
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL
 
-    def _risk_to_decision(self, level: RiskLevel) -&gt; Decision:
+    def _risk_to_decision(self, level: RiskLevel) -> Decision:
         """将风险等级映射到决策"""
         if level == RiskLevel.LOW:
             return Decision.ALLOW
@@ -605,7 +605,7 @@ class KillSwitchService:
     - Profile - 档位熔断
     - Thread - 线程熔断
 
-    检查逻辑：Global &gt; Profile &gt; Thread（父级熔断覆盖子级）
+    检查逻辑：Global > Profile > Thread（父级熔断覆盖子级）
     """
 
     def __init__(self):
@@ -617,7 +617,7 @@ class KillSwitchService:
         reason: str,
         activated_by: UUID,
         level_id: Optional[UUID] = None,
-    ) -&gt; KillSwitch:
+    ) -> KillSwitch:
         """激活熔断"""
         switch = KillSwitch(
             level=level,
@@ -633,7 +633,7 @@ class KillSwitchService:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -&gt; Optional[KillSwitch]:
+    ) -> Optional[KillSwitch]:
         """解除熔断"""
         switch = self._switches.get(switch_id)
         if switch and switch.is_active:
@@ -646,7 +646,7 @@ class KillSwitchService:
         self,
         level: KillSwitchLevel,
         level_id: Optional[UUID] = None,
-    ) -&gt; bool:
+    ) -> bool:
         """检查是否有熔断生效"""
         for switch in self._switches.values():
             if not switch.is_active:
@@ -660,7 +660,7 @@ class KillSwitchService:
     def get_active_switches(
         self,
         level: Optional[KillSwitchLevel] = None,
-    ) -&gt; List[KillSwitch]:
+    ) -> List[KillSwitch]:
         """获取当前生效的熔断"""
         switches = [s for s in self._switches.values() if s.is_active]
         if level:
@@ -683,7 +683,7 @@ class DecisionRecorder:
         self,
         thread_id: UUID,
         action_run_id: Optional[UUID] = None,
-    ) -&gt; DecisionTrace:
+    ) -> DecisionTrace:
         """开始记录决策追踪"""
         trace = DecisionTrace(
             thread_id=thread_id,
@@ -705,7 +705,7 @@ class DecisionRecorder:
         policy_hits: Optional[list] = None,
         risk_assessment_id: Optional[UUID] = None,
         kill_switch_affected: bool = False,
-    ) -&gt; DecisionTrace:
+    ) -> DecisionTrace:
         """完成决策追踪记录"""
         trace.decision = decision
         trace.decision_reason = decision_reason
@@ -714,7 +714,7 @@ class DecisionRecorder:
         trace.kill_switch_affected = kill_switch_affected
         return trace
 
-    def get_trace(self, trace_id: UUID) -&gt; Optional[DecisionTrace]:
+    def get_trace(self, trace_id: UUID) -> Optional[DecisionTrace]:
         """获取决策追踪"""
         return self._traces.get(trace_id)
 
@@ -722,7 +722,7 @@ class DecisionRecorder:
         self,
         thread_id: UUID,
         limit: int = 100,
-    ) -&gt; List[DecisionTrace]:
+    ) -> List[DecisionTrace]:
         """获取线程的决策追踪列表"""
         trace_ids = self._thread_traces.get(thread_id, [])
         traces = [self._traces.get(tid) for tid in trace_ids if tid in self._traces]
@@ -768,7 +768,7 @@ class PolicyControlController:
         thread_objective: Optional[str] = None,
         thread_status: Optional[str] = None,
         action_run_id: Optional[UUID] = None,
-    ) -&gt; Dict:
+    ) -> Dict:
         """
         8步决策链主入口
 
@@ -884,12 +884,12 @@ class PolicyControlController:
         self,
         risk_decision: Decision,
         profile_level: DelegationLevel,
-    ) -&gt; Decision:
+    ) -> Decision:
         """
         合成最终决策
 
         策略：最保守优先
-        DENY &gt; ESCALATE_TO_HUMAN &gt; REQUIRE_APPROVAL &gt; DRAFT_ONLY &gt; BOUNDED_EXECUTION &gt; ALLOW
+        DENY > ESCALATE_TO_HUMAN > REQUIRE_APPROVAL > DRAFT_ONLY > BOUNDED_EXECUTION > ALLOW
         """
         if profile_level == DelegationLevel.HUMAN_ONLY:
             return Decision.DENY
@@ -914,7 +914,7 @@ class PolicyControlController:
 def run_demo():
     """演示E2模块功能"""
     print("=" * 60)
-    print("E2 Policy &amp; Control Module - Demo")
+    print("E2 Policy & Control Module - Demo")
     print("=" * 60)
 
     controller = PolicyControlController()

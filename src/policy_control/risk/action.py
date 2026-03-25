@@ -52,7 +52,7 @@ class ActionRiskEvaluator:
     def evaluate(
         self,
         action_type: Optional[str] = None,
-    ) -&gt; RiskEvaluationResult:
+    ) -> RiskEvaluationResult:
         """
         评估动作风险
 
@@ -78,18 +78,18 @@ class ActionRiskEvaluator:
             risk_score=risk_score,
             risk_level=risk_level,
             risk_factors=risk_factors,
-            reason=f"Action risk: {action_type or 'unknown'} -&gt; {risk_level.value}",
+            reason=f"Action risk: {action_type or 'unknown'} -> {risk_level.value}",
         )
 
-    def _score_to_level(self, score: int) -&gt; RiskLevel:
+    def _score_to_level(self, score: int) -> RiskLevel:
         """将风险分数转换为风险等级"""
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 2:
+        elif score <= 2:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL

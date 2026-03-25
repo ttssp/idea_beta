@@ -15,12 +15,12 @@ class ActionHandler(ABC):
 
     @property
     @abstractmethod
-    def action_type(self) -&gt; str:
+    def action_type(self) -> str:
         """动作类型"""
         pass
 
     @abstractmethod
-    async def validate(self, input_payload: Dict[str, Any]) -&gt; tuple[bool, Optional[str]]:
+    async def validate(self, input_payload: Dict[str, Any]) -> tuple[bool, Optional[str]]:
         """
         验证输入参数
 
@@ -35,7 +35,7 @@ class ActionHandler(ABC):
         action_run_id: UUID,
         input_payload: Dict[str, Any],
         context: Dict[str, Any]
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         执行动作
 
@@ -64,15 +64,15 @@ class ActionRegistry:
         """注册动作处理器"""
         self._handlers[handler.action_type] = handler
 
-    def get(self, action_type: str) -&gt; Optional[ActionHandler]:
+    def get(self, action_type: str) -> Optional[ActionHandler]:
         """获取动作处理器"""
         return self._handlers.get(action_type)
 
-    def list_types(self) -&gt; list[str]:
+    def list_types(self) -> list[str]:
         """列出所有已注册的动作类型"""
         return list(self._handlers.keys())
 
-    def has(self, action_type: str) -&gt; bool:
+    def has(self, action_type: str) -> bool:
         """检查动作类型是否已注册"""
         return action_type in self._handlers
 

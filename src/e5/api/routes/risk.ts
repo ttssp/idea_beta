@@ -17,7 +17,7 @@ import { config } from '../../config/index.js';
 export async function riskRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{
     Body: ClassifyRiskRequest;
-    Reply: ClassifyRiskResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: ClassifyRiskResponse;
   }>(
     '/classify-risk',
     {
@@ -25,7 +25,6 @@ export async function riskRoutes(fastify: FastifyInstance): Promise<void> {
         body: ClassifyRiskRequestSchema,
         response: {
           200: ClassifyRiskResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },
@@ -61,14 +60,7 @@ export async function riskRoutes(fastify: FastifyInstance): Promise<void> {
           requestId,
           error,
         });
-
-        return reply.status(500).send({
-          error: {
-            code: 'CLASSIFICATION_FAILED',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          },
-          requestId,
-        });
+        throw error;
       }
     }
   );

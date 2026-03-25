@@ -10,7 +10,7 @@ from ..config import settings
 _redis_client: Optional[AsyncRedis] = None
 
 
-async def get_redis() -&gt; AsyncRedis:
+async def get_redis() -> AsyncRedis:
     """
     获取Redis客户端单例
 

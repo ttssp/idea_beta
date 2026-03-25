@@ -21,7 +21,7 @@ class ConsequenceRiskEvaluator:
         historical_data: Optional[Dict] = None,
         relationship_risk: int = 1,
         action_risk: int = 1,
-    ) -&gt; RiskEvaluationResult:
+    ) -> RiskEvaluationResult:
         """
         评估结果风险
 
@@ -44,16 +44,16 @@ class ConsequenceRiskEvaluator:
         if historical_data:
             # 历史错误率
             error_rate = historical_data.get("error_rate", 0)
-            if error_rate &gt; 0.5:
+            if error_rate > 0.5:
                 risk_score = max(risk_score, 5)
                 risk_factors.append("history:high_error_rate")
-            elif error_rate &gt; 0.2:
+            elif error_rate > 0.2:
                 risk_score = max(risk_score, 4)
                 risk_factors.append("history:medium_error_rate")
 
             # 历史升级率
             escalation_rate = historical_data.get("escalation_rate", 0)
-            if escalation_rate &gt; 0.3:
+            if escalation_rate > 0.3:
                 risk_score = max(risk_score, 4)
                 risk_factors.append("history:high_escalation_rate")
 
@@ -68,18 +68,18 @@ class ConsequenceRiskEvaluator:
             risk_score=risk_score,
             risk_level=risk_level,
             risk_factors=risk_factors,
-            reason=f"Consequence risk -&gt; {risk_level.value}",
+            reason=f"Consequence risk -> {risk_level.value}",
         )
 
-    def _score_to_level(self, score: int) -&gt; RiskLevel:
+    def _score_to_level(self, score: int) -> RiskLevel:
         """将风险分数转换为风险等级"""
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 2:
+        elif score <= 2:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL

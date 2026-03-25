@@ -22,7 +22,7 @@ class KillSwitchService:
     - Profile：档位/配置熔断
     - Thread：线程熔断
 
-    检查逻辑：Global &gt; Profile &gt; Thread（父级熔断覆盖子级）
+    检查逻辑：Global > Profile > Thread（父级熔断覆盖子级）
     """
 
     def __init__(self):
@@ -44,7 +44,7 @@ class KillSwitchService:
         reason: str,
         activated_by: UUID,
         level_id: Optional[UUID] = None,
-    ) -&gt; KillSwitch:
+    ) -> KillSwitch:
         """
         激活熔断
 
@@ -85,7 +85,7 @@ class KillSwitchService:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -&gt; Optional[KillSwitch]:
+    ) -> Optional[KillSwitch]:
         """
         解除熔断
 
@@ -117,7 +117,7 @@ class KillSwitchService:
         self,
         level: Optional[KillSwitchLevel] = None,
         deactivated_by: Optional[UUID] = None,
-    ) -&gt; List[KillSwitch]:
+    ) -> List[KillSwitch]:
         """
         批量解除熔断
 
@@ -152,11 +152,11 @@ class KillSwitchService:
         self,
         level: KillSwitchLevel,
         level_id: Optional[UUID] = None,
-    ) -&gt; bool:
+    ) -> bool:
         """
         检查是否有熔断生效
 
-        检查逻辑：Global &gt; Profile &gt; Thread（父级熔断覆盖子级）
+        检查逻辑：Global > Profile > Thread（父级熔断覆盖子级）
 
         Args:
             level: 要检查的级别
@@ -195,7 +195,7 @@ class KillSwitchService:
     def get_active_switches(
         self,
         level: Optional[KillSwitchLevel] = None,
-    ) -&gt; List[KillSwitch]:
+    ) -> List[KillSwitch]:
         """
         获取当前生效的熔断
 
@@ -210,7 +210,7 @@ class KillSwitchService:
             switches = [s for s in switches if s.level == level]
         return switches
 
-    def get_switch(self, switch_id: UUID) -&gt; Optional[KillSwitch]:
+    def get_switch(self, switch_id: UUID) -> Optional[KillSwitch]:
         """获取熔断开关"""
         return self._switches.get(switch_id)
 
@@ -235,7 +235,7 @@ class KillSwitchService:
         self,
         level: KillSwitchLevel,
         level_id: Optional[UUID] = None,
-    ) -&gt; Optional[KillSwitch]:
+    ) -> Optional[KillSwitch]:
         """查找已存在的活跃熔断"""
         for switch in self._switches.values():
             if not switch.is_active:

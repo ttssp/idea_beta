@@ -24,7 +24,7 @@ async def prepare_action(
     request: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     准备动作（生成ActionRun）
     """
@@ -70,7 +70,7 @@ async def execute_action(
     request: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     执行动作
     """
@@ -150,7 +150,7 @@ async def cancel_action(
     thread_id: UUID,
     action_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     取消动作
     """
@@ -177,7 +177,7 @@ async def list_actions(
     status: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     查询动作列表
     """
@@ -190,7 +190,7 @@ async def list_actions(
     }
 
 
-def _action_run_to_dict(action_run: ActionRun) -&gt; Dict[str, Any]:
+def _action_run_to_dict(action_run: ActionRun) -> Dict[str, Any]:
     """将ActionRun转换为字典"""
     return {
         "id": str(action_run.id),

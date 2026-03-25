@@ -15,7 +15,7 @@ from ..core.idempotency import IdempotencyManager
 from ..config import settings
 
 
-async def get_db() -&gt; AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """获取数据库会话"""
     async for session in get_db_session():
         yield session
@@ -23,7 +23,7 @@ async def get_db() -&gt; AsyncGenerator[AsyncSession, None]:
 
 async def get_idempotency_manager(
     redis=Depends(get_redis)
-) -&gt; IdempotencyManager:
+) -> IdempotencyManager:
     """获取幂等键管理器"""
     from datetime import timedelta
     return IdempotencyManager(
@@ -34,7 +34,7 @@ async def get_idempotency_manager(
 
 async def get_idempotency_key(
     idempotency_key: str = Header(None, alias="Idempotency-Key")
-) -&gt; str:
+) -> str:
     """从Header获取幂等键"""
     if not idempotency_key:
         raise HTTPException(

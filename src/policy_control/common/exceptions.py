@@ -1,11 +1,11 @@
 
 """
-Policy &amp; Control Exceptions
+Policy & Control Exceptions
 """
 
 
 class PolicyControlError(Exception):
-    """Policy &amp; Control基础异常"""
+    """Policy & Control基础异常"""
 
     pass
 

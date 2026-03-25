@@ -36,7 +36,7 @@ class KillSwitchAPI:
     def get_active_kill_switches(
         self,
         level: Optional[KillSwitchLevel] = None,
-    ) -&gt; List[KillSwitch]:
+    ) -> List[KillSwitch]:
         """
         GET /kill-switches
 
@@ -48,7 +48,7 @@ class KillSwitchAPI:
         self,
         request: ActivateKillSwitchRequest,
         activated_by: UUID,
-    ) -&gt; KillSwitch:
+    ) -> KillSwitch:
         """
         POST /kill-switches
 
@@ -65,7 +65,7 @@ class KillSwitchAPI:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -&gt; Optional[KillSwitch]:
+    ) -> Optional[KillSwitch]:
         """
         DELETE /kill-switches/{id}
 

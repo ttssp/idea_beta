@@ -37,7 +37,7 @@ class PolicyAPI:
         self,
         request: PolicyEvaluationRequest,
         relationship_id: Optional[UUID] = None,
-    ) -&gt; PolicyDecision:
+    ) -> PolicyDecision:
         """
         POST /policy/evaluate
 

@@ -24,7 +24,7 @@ async def gmail_webhook(
     x_gmail_timestamp: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Gmail Webhook入口
     """
@@ -73,7 +73,7 @@ async def outlook_mail_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Outlook Mail Webhook入口
     """
@@ -86,7 +86,7 @@ async def google_calendar_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Google Calendar Webhook入口
     """
@@ -99,7 +99,7 @@ async def outlook_calendar_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Outlook Calendar Webhook入口
     """

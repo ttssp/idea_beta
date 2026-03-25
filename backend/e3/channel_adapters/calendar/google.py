@@ -57,7 +57,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         self,
         payload: Dict[str, Any],
         idempotency_key: str
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         发送消息（对于Calendar，这意味着创建/更新事件）
 
@@ -173,7 +173,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -&gt; Optional[ChannelMessage]:
+    ) -> Optional[ChannelMessage]:
         """
         获取单个事件
 
@@ -209,7 +209,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -&gt; List[ChannelMessage]:
+    ) -> List[ChannelMessage]:
         """
         获取线程内所有消息（对于Calendar，这是单个事件）
 
@@ -225,7 +225,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def get_external_thread_key(
         self,
         message: ChannelMessage
-    ) -&gt; str:
+    ) -> str:
         """
         从消息中提取线程Key
 
@@ -242,7 +242,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         payload: bytes,
         signature_header: str,
         timestamp_header: str
-    ) -&gt; bool:
+    ) -> bool:
         """
         验证Webhook签名
 
@@ -258,7 +258,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         time_min: datetime,
         time_max: datetime,
         time_zone: str = 'UTC'
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         查询忙闲时间
 
@@ -290,7 +290,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         time_min: Optional[datetime] = None,
         time_max: Optional[datetime] = None,
         max_results: int = 50
-    ) -&gt; List[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         列出事件
 
@@ -326,7 +326,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         self,
         event: Dict[str, Any],
         calendar_id: str
-    ) -&gt; ChannelMessage:
+    ) -> ChannelMessage:
         """将Calendar事件转换为ChannelMessage"""
         start = event.get('start', {})
         end = event.get('end', {})
@@ -366,7 +366,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         self,
         calendar_id: str,
         ical_uid: str
-    ) -&gt; Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:
         """通过iCalUID查找事件（用于幂等）"""
         # 简化实现：列出最近事件并查找
         # 生产环境应该使用syncToken或watch机制
@@ -381,7 +381,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
 
         return None
 
-    def _is_retryable_error(self, error: Exception) -&gt; bool:
+    def _is_retryable_error(self, error: Exception) -> bool:
         """判断错误是否可重试"""
         error_str = str(error).lower()
 

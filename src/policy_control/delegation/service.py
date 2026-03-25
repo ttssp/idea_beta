@@ -47,18 +47,18 @@ class DelegationService:
             )
             self._profiles[profile.id] = profile
 
-    def get_profile(self, profile_id: UUID) -&gt; Optional[DelegationProfile]:
+    def get_profile(self, profile_id: UUID) -> Optional[DelegationProfile]:
         """获取委托档位"""
         return self._profiles.get(profile_id)
 
-    def get_profile_by_name(self, name: str) -&gt; Optional[DelegationProfile]:
+    def get_profile_by_name(self, name: str) -> Optional[DelegationProfile]:
         """通过名称获取委托档位"""
         for profile in self._profiles.values():
             if profile.name == name:
                 return profile
         return None
 
-    def list_profiles(self, include_system: bool = True) -&gt; List[DelegationProfile]:
+    def list_profiles(self, include_system: bool = True) -> List[DelegationProfile]:
         """列出所有可用档位"""
         profiles = list(self._profiles.values())
         if not include_system:
@@ -74,7 +74,7 @@ class DelegationService:
         description: Optional[str] = None,
         budget_config: Optional[Dict] = None,
         escalation_rules: Optional[Dict] = None,
-    ) -&gt; DelegationProfile:
+    ) -> DelegationProfile:
         """创建自定义委托档位"""
         if self.get_profile_by_name(name):
             raise InvalidDelegationProfileError(f"Profile with name '{name}' already exists")
@@ -96,7 +96,7 @@ class DelegationService:
         self,
         profile_id: UUID,
         **kwargs,
-    ) -&gt; Optional[DelegationProfile]:
+    ) -> Optional[DelegationProfile]:
         """更新委托档位"""
         profile = self._profiles.get(profile_id)
         if not profile:
@@ -115,7 +115,7 @@ class DelegationService:
         thread_id: UUID,
         profile_id: UUID,
         bound_by: Optional[UUID] = None,
-    ) -&gt; ThreadDelegationBinding:
+    ) -> ThreadDelegationBinding:
         """绑定线程委托档位"""
         if profile_id not in self._profiles:
             raise InvalidDelegationProfileError(f"Profile {profile_id} not found")
@@ -135,7 +135,7 @@ class DelegationService:
         relationship_id: UUID,
         profile_id: UUID,
         bound_by: Optional[UUID] = None,
-    ) -&gt; RelationshipDelegationBinding:
+    ) -> RelationshipDelegationBinding:
         """绑定关系默认委托档位"""
         if profile_id not in self._profiles:
             raise InvalidDelegationProfileError(f"Profile {profile_id} not found")
@@ -154,11 +154,11 @@ class DelegationService:
         self,
         thread_id: Optional[UUID] = None,
         relationship_id: Optional[UUID] = None,
-    ) -&gt; DelegationProfile:
+    ) -> DelegationProfile:
         """
         获取有效委托档位
 
-        优先级：Thread &gt; Relationship &gt; System Default (Observe Only)
+        优先级：Thread > Relationship > System Default (Observe Only)
         """
         # 1. 检查线程级绑定
         if thread_id and thread_id in self._thread_bindings:
@@ -186,7 +186,7 @@ class DelegationService:
         thread_id: UUID,
         action_type: str,
         profile: DelegationProfile,
-    ) -&gt; bool:
+    ) -> bool:
         """
         检查动作预算是否超限
 
@@ -206,14 +206,14 @@ class DelegationService:
 
         # 获取当前使用量
         current_usage = self._get_budget_usage(thread_id, action_type, window_start, now)
-        return current_usage &lt; max_count
+        return current_usage < max_count
 
     def consume_budget(
         self,
         thread_id: UUID,
         action_type: str,
         profile: DelegationProfile,
-    ) -&gt; bool:
+    ) -> bool:
         """
         消耗预算计数
 
@@ -249,7 +249,7 @@ class DelegationService:
         action_type: str,
         window_start: datetime,
         window_end: datetime,
-    ) -&gt; int:
+    ) -> int:
         """获取预算使用量"""
         if thread_id not in self._budget_usages:
             return 0
@@ -258,8 +258,8 @@ class DelegationService:
         for usage in self._budget_usages[thread_id]:
             if (
                 usage.action_type == action_type
-                and usage.window_start &lt;= window_end
-                and usage.window_end &gt;= window_start
+                and usage.window_start <= window_end
+                and usage.window_end >= window_start
             ):
                 count += usage.count
         return count

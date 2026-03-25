@@ -36,7 +36,7 @@ class ChannelAdapter(ABC):
         self,
         payload: Dict[str, Any],
         idempotency_key: str
-    ) -&gt; Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         发送消息
 
@@ -57,7 +57,7 @@ class ChannelAdapter(ABC):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -&gt; Optional[ChannelMessage]:
+    ) -> Optional[ChannelMessage]:
         """
         获取单条消息
 
@@ -73,7 +73,7 @@ class ChannelAdapter(ABC):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -&gt; List[ChannelMessage]:
+    ) -> List[ChannelMessage]:
         """
         获取线程内所有消息
 
@@ -89,7 +89,7 @@ class ChannelAdapter(ABC):
     async def get_external_thread_key(
         self,
         message: ChannelMessage
-    ) -&gt; str:
+    ) -> str:
         """
         从消息中提取线程Key
 
@@ -107,7 +107,7 @@ class ChannelAdapter(ABC):
         payload: bytes,
         signature_header: str,
         timestamp_header: str
-    ) -&gt; bool:
+    ) -> bool:
         """
         验证Webhook签名
 

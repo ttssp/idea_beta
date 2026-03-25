@@ -16,7 +16,7 @@ import { logger } from '../../utils/logger.js';
 export async function summaryRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{
     Body: SummarizeThreadRequest;
-    Reply: SummarizeThreadResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: SummarizeThreadResponse;
   }>(
     '/summarize-thread',
     {
@@ -24,7 +24,6 @@ export async function summaryRoutes(fastify: FastifyInstance): Promise<void> {
         body: SummarizeThreadRequestSchema,
         response: {
           200: SummarizeThreadResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },

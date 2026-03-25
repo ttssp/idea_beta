@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Module - Main Entry Point
+Policy & Control Module - Main Entry Point
 
 Example usage and testing
 """
@@ -10,9 +10,9 @@ from .common.constants import Decision, DelegationLevel
 
 
 def main():
-    """示例：展示Policy &amp; Control模块的使用"""
+    """示例：展示Policy & Control模块的使用"""
     print("=" * 60)
-    print("Policy &amp; Control Module")
+    print("Policy & Control Module")
     print("=" * 60)
 
     # 创建控制器

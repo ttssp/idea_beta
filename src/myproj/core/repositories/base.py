@@ -66,9 +66,9 @@ class BaseRepository(ABC, Generic[EntityId, Entity, Model]):
         existing = self.get(self._get_entity_id(entity))
 
         if existing:
-            # 更新
+            # 更新 - merge 返回值必须接住，这才是 attached 实例
             model = self._to_model(entity)
-            self.session.merge(model)
+            model = self.session.merge(model)
         else:
             # 新建
             model = self._to_model(entity)

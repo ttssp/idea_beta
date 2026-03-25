@@ -19,9 +19,9 @@ class ConflictResolver:
     策略冲突解决器
 
     冲突解决策略：
-    1. DENY &gt; REQUIRE_APPROVAL &gt; ESCALATE &gt; ALLOW
+    1. DENY > REQUIRE_APPROVAL > ESCALATE > ALLOW
     2. 同effect时，priority高的优先
-    3. 同priority时，scope更具体的优先 (THREAD &gt; RELATIONSHIP &gt; PROFILE &gt; GLOBAL)
+    3. 同priority时，scope更具体的优先 (THREAD > RELATIONSHIP > PROFILE > GLOBAL)
     """
 
     # Effect优先级（数值越大优先级越高）
@@ -40,7 +40,7 @@ class ConflictResolver:
         PolicyScope.GLOBAL: 25,
     }
 
-    def resolve(self, rules: List[PolicyRule]) -&gt; PolicyRule:
+    def resolve(self, rules: List[PolicyRule]) -> PolicyRule:
         """
         从冲突规则中选出获胜者
 
@@ -77,16 +77,16 @@ class PolicyEngine:
         self._rules: Dict[UUID, PolicyRule] = {}
         self._conflict_resolver = ConflictResolver()
 
-    def add_rule(self, rule: PolicyRule) -&gt; PolicyRule:
+    def add_rule(self, rule: PolicyRule) -> PolicyRule:
         """添加策略规则"""
         self._rules[rule.id] = rule
         return rule
 
-    def get_rule(self, rule_id: UUID) -&gt; Optional[PolicyRule]:
+    def get_rule(self, rule_id: UUID) -> Optional[PolicyRule]:
         """获取策略规则"""
         return self._rules.get(rule_id)
 
-    def update_rule(self, rule_id: UUID, **kwargs) -&gt; Optional[PolicyRule]:
+    def update_rule(self, rule_id: UUID, **kwargs) -> Optional[PolicyRule]:
         """更新策略规则"""
         rule = self._rules.get(rule_id)
         if not rule:
@@ -98,7 +98,7 @@ class PolicyEngine:
         rule.updated_at = datetime.utcnow()
         return rule
 
-    def delete_rule(self, rule_id: UUID) -&gt; bool:
+    def delete_rule(self, rule_id: UUID) -> bool:
         """删除策略规则"""
         if rule_id in self._rules:
             del self._rules[rule_id]
@@ -110,7 +110,7 @@ class PolicyEngine:
         scope: Optional[PolicyScope] = None,
         scope_id: Optional[UUID] = None,
         active_only: bool = True,
-    ) -&gt; List[PolicyRule]:
+    ) -> List[PolicyRule]:
         """列出策略规则"""
         rules = list(self._rules.values())
 
@@ -133,7 +133,7 @@ class PolicyEngine:
         action: str,
         scope: Optional[PolicyScope] = None,
         scope_id: Optional[UUID] = None,
-    ) -&gt; List[PolicyRule]:
+    ) -> List[PolicyRule]:
         """
         匹配适用的策略规则
 
@@ -169,7 +169,7 @@ class PolicyEngine:
     def evaluate(
         self,
         policy_context: PolicyContext,
-    ) -&gt; PolicyDecision:
+    ) -> PolicyDecision:
         """
         策略评估（主要入口）
 
@@ -224,7 +224,7 @@ class PolicyEngine:
             metadata={"winning_rule": str(winning_rule.id)},
         )
 
-    def _effect_to_decision(self, effect: PolicyEffect) -&gt; Decision:
+    def _effect_to_decision(self, effect: PolicyEffect) -> Decision:
         """将PolicyEffect映射到Decision"""
         mapping = {
             PolicyEffect.ALLOW: Decision.ALLOW,

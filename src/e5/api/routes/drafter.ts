@@ -25,7 +25,7 @@ import { config } from '../../config/index.js';
 export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{
     Body: DraftMessageRequest;
-    Reply: DraftMessageResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: DraftMessageResponse;
   }>(
     '/draft-message',
     {
@@ -33,7 +33,6 @@ export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
         body: DraftMessageRequestSchema,
         response: {
           200: DraftMessageResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },
@@ -68,7 +67,7 @@ export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.post<{
     Body: GenerateTimeSlotsRequest;
-    Reply: GenerateTimeSlotsResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: GenerateTimeSlotsResponse;
   }>(
     '/generate-time-slots',
     {
@@ -76,7 +75,6 @@ export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
         body: GenerateTimeSlotsRequestSchema,
         response: {
           200: GenerateTimeSlotsResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },
@@ -101,7 +99,7 @@ export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.post<{
     Body: GenerateChecklistRequest;
-    Reply: GenerateChecklistResponse | { error: { code: string; message: string }; requestId: string };
+    Reply: GenerateChecklistResponse;
   }>(
     '/generate-checklist',
     {
@@ -109,7 +107,6 @@ export async function drafterRoutes(fastify: FastifyInstance): Promise<void> {
         body: GenerateChecklistRequestSchema,
         response: {
           200: GenerateChecklistResponseSchema,
-          500: { $ref: 'ErrorResponseSchema' },
         },
       },
     },

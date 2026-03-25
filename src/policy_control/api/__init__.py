@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control API Module
+Policy & Control API Module
 
 OpenAPI接口定义
 """

@@ -153,7 +153,7 @@ class TestGmailAdapter:
 
         # 验证：需要手动触发失败来测试熔断器
         # 这个测试简化处理
-        assert email_circuit.fail_max &gt; 0
+        assert email_circuit.fail_max > 0
 
     def test_em_e02_retryable_error(self, gmail_adapter):
         """EM-E02: 网络超时可重试"""

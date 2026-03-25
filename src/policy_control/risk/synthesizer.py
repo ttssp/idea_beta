@@ -53,7 +53,7 @@ class RiskSynthesizer:
     def evaluate(
         self,
         context: RiskContext,
-    ) -&gt; RiskDecision:
+    ) -> RiskDecision:
         """
         风险评估主入口
 
@@ -146,7 +146,7 @@ class RiskSynthesizer:
         act_result: RiskEvaluationResult,
         con_result: RiskEvaluationResult,
         conq_result: RiskEvaluationResult,
-    ) -&gt; tuple[int, RiskLevel]:
+    ) -> tuple[int, RiskLevel]:
         """
         合成风险评估
 
@@ -168,9 +168,9 @@ class RiskSynthesizer:
             conq_result.risk_score,
         )
 
-        if max_score &gt;= 5:
+        if max_score >= 5:
             overall_score = 5
-        elif max_score &gt;= 4:
+        elif max_score >= 4:
             overall_score = max(4, int(weighted_score))
         else:
             overall_score = int(weighted_score)
@@ -184,15 +184,15 @@ class RiskSynthesizer:
         rel_result: RiskEvaluationResult,
         act_result: RiskEvaluationResult,
         con_result: RiskEvaluationResult,
-    ) -&gt; Decision:
+    ) -> Decision:
         """
         将风险等级映射到决策
 
         策略：
-        - LOW -&gt; ALLOW / BOUNDED_EXECUTION
-        - MEDIUM -&gt; REQUIRE_APPROVAL / DRAFT_ONLY
-        - HIGH -&gt; ESCALATE_TO_HUMAN
-        - CRITICAL -&gt; DENY
+        - LOW -> ALLOW / BOUNDED_EXECUTION
+        - MEDIUM -> REQUIRE_APPROVAL / DRAFT_ONLY
+        - HIGH -> ESCALATE_TO_HUMAN
+        - CRITICAL -> DENY
         """
         # 先按总体风险等级
         base_decision = self.DECISION_THRESHOLDS.get(
@@ -201,15 +201,15 @@ class RiskSynthesizer:
         )
 
         # 内容风险特殊处理
-        if con_result.risk_score &gt;= 3 and base_decision == Decision.ALLOW:
+        if con_result.risk_score >= 3 and base_decision == Decision.ALLOW:
             return Decision.DRAFT_ONLY
 
         # 关系风险特殊处理
-        if rel_result.risk_score &gt;= 4 and base_decision == Decision.REQUIRE_APPROVAL:
+        if rel_result.risk_score >= 4 and base_decision == Decision.REQUIRE_APPROVAL:
             return Decision.ESCALATE_TO_HUMAN
 
         # 动作风险特殊处理
-        if act_result.risk_score &gt;= 4:
+        if act_result.risk_score >= 4:
             return Decision.ESCALATE_TO_HUMAN
 
         return base_decision
@@ -222,7 +222,7 @@ class RiskSynthesizer:
         con_result: RiskEvaluationResult,
         conq_result: RiskEvaluationResult,
         recommendation: Decision,
-    ) -&gt; str:
+    ) -> str:
         """构建决策原因说明"""
         reasons = [
             f"Overall: {overall_level.value}",
@@ -234,19 +234,19 @@ class RiskSynthesizer:
         ]
         return " | ".join(reasons)
 
-    def _score_to_level(self, score: int) -&gt; RiskLevel:
+    def _score_to_level(self, score: int) -> RiskLevel:
         """将风险分数转换为风险等级"""
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 2:
+        elif score <= 2:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL
 
-    def get_assessment(self, assessment_id: UUID) -&gt; Optional[RiskAssessment]:
+    def get_assessment(self, assessment_id: UUID) -> Optional[RiskAssessment]:
         """获取风险评估记录"""
         return self._assessments.get(assessment_id)

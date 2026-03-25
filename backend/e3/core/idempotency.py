@@ -30,7 +30,7 @@ class IdempotencyManager:
         self.redis = redis
         self.ttl = ttl
 
-    def generate_key(self, *components: Any) -&gt; str:
+    def generate_key(self, *components: Any) -> str:
         """
         根据组件生成幂等键
 
@@ -47,7 +47,7 @@ class IdempotencyManager:
         self,
         key: str,
         value: str = "processing"
-    ) -&gt; Tuple[bool, Optional[str]]:
+    ) -> Tuple[bool, Optional[str]]:
         """
         检查并设置幂等键
 

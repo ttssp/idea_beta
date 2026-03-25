@@ -1,6 +1,6 @@
 
 """
-E2 Policy &amp; Control Module - Simplified Working Version
+E2 Policy & Control Module - Simplified Working Version
 
 This is a complete, working implementation of the E2 module.
 """
@@ -12,7 +12,7 @@ from enum import Enum
 
 
 # ============================================================================
-# Enums &amp; Constants
+# Enums & Constants
 # ============================================================================
 
 class DelegationLevel(str, Enum):
@@ -289,11 +289,11 @@ class RiskEvaluator:
         return 1
 
     def _score_to_level(self, score):
-        if score &lt;= 1:
+        if score <= 1:
             return RiskLevel.LOW
-        elif score &lt;= 3:
+        elif score <= 3:
             return RiskLevel.MEDIUM
-        elif score &lt;= 4:
+        elif score <= 4:
             return RiskLevel.HIGH
         else:
             return RiskLevel.CRITICAL
@@ -398,7 +398,7 @@ class PolicyControlController:
         final_reason = "Error during evaluation"
         kill_switch_affected = False
 
-        # Step 1 &amp; 2: Get delegation profile
+        # Step 1 & 2: Get delegation profile
         profile = self.delegation_service.get_effective_profile(thread_id)
         trace.steps.append({
             "step": 2,
@@ -419,7 +419,7 @@ class PolicyControlController:
             final_decision = Decision.DENY
             final_reason = "Kill switch active"
         else:
-            # Step 5 &amp; 6: Risk evaluation
+            # Step 5 & 6: Risk evaluation
             risk_result = self.risk_evaluator.evaluate(
                 content=content,
                 relationship_class=relationship_class,
@@ -469,7 +469,7 @@ class PolicyControlController:
 def run_demo():
     """演示E2模块功能"""
     print("="*60)
-    print("E2 Policy &amp; Control Module - Demo")
+    print("E2 Policy & Control Module - Demo")
     print("="*60)
 
     controller = PolicyControlController()

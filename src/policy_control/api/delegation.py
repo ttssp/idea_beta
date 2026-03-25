@@ -39,7 +39,7 @@ class DelegationAPI:
     def get_delegation_profiles(
         self,
         include_system: bool = True,
-    ) -&gt; List[DelegationProfile]:
+    ) -> List[DelegationProfile]:
         """
         GET /delegation-profiles
 
@@ -52,7 +52,7 @@ class DelegationAPI:
         thread_id: UUID,
         request: SetThreadProfileRequest,
         bound_by: Optional[UUID] = None,
-    ) -&gt; bool:
+    ) -> bool:
         """
         POST /threads/{id}/delegation-profile
 
@@ -70,7 +70,7 @@ class DelegationAPI:
         relationship_id: UUID,
         request: SetRelationshipProfileRequest,
         bound_by: Optional[UUID] = None,
-    ) -&gt; bool:
+    ) -> bool:
         """
         POST /relationships/{id}/delegation-profile
 

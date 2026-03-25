@@ -59,7 +59,7 @@ class DecisionTrace:
         )
         self.steps.append(step)
 
-    def to_dict(self) -&gt; Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
             "id": str(self.id),

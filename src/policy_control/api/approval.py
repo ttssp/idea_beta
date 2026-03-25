@@ -39,7 +39,7 @@ class ApprovalAPI:
         status: Optional[ApprovalStatus] = None,
         approver_principal_id: Optional[UUID] = None,
         limit: int = 100,
-    ) -&gt; List[ApprovalRequest]:
+    ) -> List[ApprovalRequest]:
         """
         GET /approvals
 
@@ -52,7 +52,7 @@ class ApprovalAPI:
             limit=limit,
         )
 
-    def get_approval(self, approval_id: UUID) -&gt; Optional[ApprovalRequest]:
+    def get_approval(self, approval_id: UUID) -> Optional[ApprovalRequest]:
         """
         GET /approvals/{id}
 
@@ -65,7 +65,7 @@ class ApprovalAPI:
         approval_id: UUID,
         request: ResolveApprovalRequest,
         resolved_by: UUID,
-    ) -&gt; ApprovalRequest:
+    ) -> ApprovalRequest:
         """
         POST /approvals/{id}:resolve
 

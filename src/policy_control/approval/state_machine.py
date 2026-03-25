@@ -15,12 +15,12 @@ class ApprovalStateMachine:
     审批状态机
 
     状态流转:
-        PENDING -&gt; APPROVED
-        PENDING -&gt; REJECTED
-        PENDING -&gt; MODIFIED
-        PENDING -&gt; TAKEN_OVER
-        PENDING -&gt; CANCELLED
-        PENDING -&gt; TIMEOUT
+        PENDING -> APPROVED
+        PENDING -> REJECTED
+        PENDING -> MODIFIED
+        PENDING -> TAKEN_OVER
+        PENDING -> CANCELLED
+        PENDING -> TIMEOUT
     """
 
     # 允许的状态流转
@@ -43,13 +43,13 @@ class ApprovalStateMachine:
     }
 
     @classmethod
-    def can_transition(cls, from_status: ApprovalStatus, to_status: ApprovalStatus) -&gt; bool:
+    def can_transition(cls, from_status: ApprovalStatus, to_status: ApprovalStatus) -> bool:
         """检查是否允许状态流转"""
         allowed = cls.ALLOWED_TRANSITIONS.get(from_status, set())
         return to_status in allowed
 
     @classmethod
-    def transition(cls, current_status: ApprovalStatus, target_status: ApprovalStatus) -&gt; ApprovalStatus:
+    def transition(cls, current_status: ApprovalStatus, target_status: ApprovalStatus) -> ApprovalStatus:
         """
         执行状态流转
 
@@ -63,11 +63,11 @@ class ApprovalStateMachine:
         return target_status
 
     @classmethod
-    def is_terminal(cls, status: ApprovalStatus) -&gt; bool:
+    def is_terminal(cls, status: ApprovalStatus) -> bool:
         """检查是否是终态"""
         return len(cls.ALLOWED_TRANSITIONS.get(status, set())) == 0
 
     @classmethod
-    def get_allowed_next_statuses(cls, status: ApprovalStatus) -&gt; Set[ApprovalStatus]:
+    def get_allowed_next_statuses(cls, status: ApprovalStatus) -> Set[ApprovalStatus]:
         """获取允许的下一状态"""
         return cls.ALLOWED_TRANSITIONS.get(status, set()).copy()

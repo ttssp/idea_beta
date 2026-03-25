@@ -87,11 +87,11 @@ class ActionRunStateMachine:
             "timestamp": datetime.utcnow().isoformat()
         })
         if self.state_change_callback:
-            from_state = self.state_history[-2]["state"] if len(self.state_history) &gt;= 2 else None
+            from_state = self.state_history[-2]["state"] if len(self.state_history) >= 2 else None
             self.state_change_callback(from_state, self.state)
 
     @property
-    def state(self) -&gt; str:
+    def state(self) -> str:
         """获取当前状态"""
         return self._state
 
@@ -100,7 +100,7 @@ class ActionRunStateMachine:
         """设置状态（供transitions库使用）"""
         self._state = value
 
-    def can_transition_to(self, target_state: str) -&gt; bool:
+    def can_transition_to(self, target_state: str) -> bool:
         """检查是否可以转换到目标状态"""
         try:
             return self.machine.get_transitions(dest=target_state, source=self.state) is not None
@@ -108,7 +108,7 @@ class ActionRunStateMachine:
             return False
 
     @property
-    def is_terminal(self) -&gt; bool:
+    def is_terminal(self) -> bool:
         """是否是终态"""
         return self.state in [
             ActionRunStatus.ACKNOWLEDGED,
@@ -117,7 +117,7 @@ class ActionRunStateMachine:
         ]
 
     @property
-    def can_cancel(self) -&gt; bool:
+    def can_cancel(self) -> bool:
         """是否可以取消"""
         return self.state in [
             ActionRunStatus.PLANNED,
@@ -126,11 +126,11 @@ class ActionRunStateMachine:
         ]
 
     @property
-    def can_retry(self) -&gt; bool:
+    def can_retry(self) -> bool:
         """是否可以重试"""
         return self.state == ActionRunStatus.FAILED_RETRYABLE
 
-    def get_available_triggers(self) -&gt; List[str]:
+    def get_available_triggers(self) -> List[str]:
         """获取当前状态下可用的触发器"""
         return self.machine.get_triggers(self.state)
 

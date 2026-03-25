@@ -42,7 +42,7 @@ class ActionRunEngine:
         input_payload: Dict[str, Any],
         idempotency_key: str,
         scheduled_for: Optional[datetime] = None
-    ) -&gt; ActionRun:
+    ) -> ActionRun:
         """
         创建新的ActionRun
 
@@ -87,7 +87,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def plan_action(self, action_run_id: UUID, input_payload: Optional[Dict[str, Any]] = None) -&gt; ActionRun:
+    async def plan_action(self, action_run_id: UUID, input_payload: Optional[Dict[str, Any]] = None) -> ActionRun:
         """
         规划动作：created → planned
 
@@ -123,7 +123,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def submit_for_approval(self, action_run_id: UUID) -&gt; ActionRun:
+    async def submit_for_approval(self, action_run_id: UUID) -> ActionRun:
         """
         提交审批：planned → ready_for_approval
         """
@@ -145,7 +145,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def approve(self, action_run_id: UUID) -&gt; ActionRun:
+    async def approve(self, action_run_id: UUID) -> ActionRun:
         """
         批准：ready_for_approval → approved
         """
@@ -167,7 +167,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def reject(self, action_run_id: UUID) -&gt; ActionRun:
+    async def reject(self, action_run_id: UUID) -> ActionRun:
         """
         拒绝：ready_for_approval → cancelled
         """
@@ -189,7 +189,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def start_execution(self, action_run_id: UUID) -&gt; ActionRun:
+    async def start_execution(self, action_run_id: UUID) -> ActionRun:
         """
         开始执行：approved → executing
         """
@@ -219,7 +219,7 @@ class ActionRunEngine:
         output_payload: Optional[Dict[str, Any]] = None,
         external_message_id: Optional[str] = None,
         external_thread_id: Optional[str] = None
-    ) -&gt; ActionRun:
+    ) -> ActionRun:
         """
         标记发送成功：executing → sent
         """
@@ -251,7 +251,7 @@ class ActionRunEngine:
         self,
         action_run_id: UUID,
         error: str
-    ) -&gt; ActionRun:
+    ) -> ActionRun:
         """
         标记可重试失败：executing → failed_retryable
         """
@@ -280,7 +280,7 @@ class ActionRunEngine:
         self,
         action_run_id: UUID,
         error: str
-    ) -&gt; ActionRun:
+    ) -> ActionRun:
         """
         标记终端失败：executing → failed_terminal
         """
@@ -304,14 +304,14 @@ class ActionRunEngine:
 
         return action_run
 
-    async def retry(self, action_run_id: UUID) -&gt; ActionRun:
+    async def retry(self, action_run_id: UUID) -> ActionRun:
         """
         重试：failed_retryable → executing
         """
         action_run = await self._get_action_run(action_run_id)
 
         # 检查是否超过最大重试次数
-        if action_run.retry_count &gt;= action_run.max_retries:
+        if action_run.retry_count >= action_run.max_retries:
             sm = ActionRunStateMachine(action_run.status)
             sm.max_retries_exceeded()
             action_run.status = sm.state
@@ -345,7 +345,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def acknowledge(self, action_run_id: UUID) -&gt; ActionRun:
+    async def acknowledge(self, action_run_id: UUID) -> ActionRun:
         """
         确认接收：sent → acknowledged
         """
@@ -367,7 +367,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def cancel(self, action_run_id: UUID) -&gt; ActionRun:
+    async def cancel(self, action_run_id: UUID) -> ActionRun:
         """
         取消动作
         """
@@ -394,7 +394,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def get_action_run(self, action_run_id: UUID) -&gt; Optional[ActionRun]:
+    async def get_action_run(self, action_run_id: UUID) -> Optional[ActionRun]:
         """获取ActionRun"""
         return await self._get_action_run(action_run_id)
 
@@ -403,7 +403,7 @@ class ActionRunEngine:
         thread_id: UUID,
         status: Optional[str] = None,
         limit: int = 50
-    ) -&gt; list[ActionRun]:
+    ) -> list[ActionRun]:
         """列出Thread的所有ActionRun"""
         query = select(ActionRun).where(ActionRun.thread_id == thread_id)
         if status:
@@ -413,7 +413,7 @@ class ActionRunEngine:
         return list(result.scalars().all())
 
     # Internal methods
-    async def _get_action_run(self, action_run_id: UUID) -&gt; ActionRun:
+    async def _get_action_run(self, action_run_id: UUID) -> ActionRun:
         result = await self.db.execute(
             select(ActionRun).where(ActionRun.id == action_run_id)
         )

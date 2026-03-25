@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "types": ["node", "vitest/globals"],
+    "outDir": "./dist",
+    "rootDir": "./src/e5",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@e5/*": ["src/e5/*"]
+    }
+  },
+  "include": ["src/e5/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/app/**", "src/components/**", "src/lib/**"]
+}

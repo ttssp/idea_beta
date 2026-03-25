@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Constants and Enums
+Policy & Control Constants and Enums
 """
 from enum import Enum
 

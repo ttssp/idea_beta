@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Type Definitions
+Policy & Control Type Definitions
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional

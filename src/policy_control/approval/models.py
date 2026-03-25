@@ -32,19 +32,19 @@ class ApprovalRequest:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
-    def is_resolved(self) -&gt; bool:
+    def is_resolved(self) -> bool:
         """检查是否已解决"""
         return self.status not in [ApprovalStatus.PENDING]
 
-    def is_pending(self) -&gt; bool:
+    def is_pending(self) -> bool:
         """检查是否待审批"""
         return self.status == ApprovalStatus.PENDING
 
-    def is_timed_out(self) -&gt; bool:
+    def is_timed_out(self) -> bool:
         """检查是否超时"""
         if not self.timeout_at:
             return False
-        return datetime.utcnow() &gt; self.timeout_at
+        return datetime.utcnow() > self.timeout_at
 
 
 @dataclass

@@ -23,7 +23,7 @@ async def draft_message(
     request: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     起草消息（挂载到thread）
     """
@@ -70,7 +70,7 @@ async def send_message(
     request: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     发送消息（通过egress）
     """

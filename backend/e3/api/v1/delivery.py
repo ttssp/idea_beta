@@ -21,7 +21,7 @@ router = APIRouter(tags=["delivery"])
 async def delivery_status_callback(
     request: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     外部回执回调
     """
@@ -42,7 +42,7 @@ async def delivery_status_callback(
 async def get_delivery_status(
     delivery_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -&gt; Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     查询发送状态
     """

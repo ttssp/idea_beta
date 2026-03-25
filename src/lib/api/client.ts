@@ -12,13 +12,35 @@ class ApiClient {
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string | number>): string {
-    const url = new URL(endpoint, this.baseUrl);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.append(key, String(value));
-      });
+    let url: string;
+
+    // 处理相对路径和绝对路径的情况
+    if (this.baseUrl.startsWith('http://') || this.baseUrl.startsWith('https://')) {
+      // 绝对 URL，正常使用 URL 构造函数
+      const urlObj = new URL(endpoint.replace(/^\//, ''), this.baseUrl);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          urlObj.searchParams.append(key, String(value));
+        });
+      }
+      url = urlObj.toString();
+    } else {
+      // 相对路径（浏览器环境），手动拼接
+      const basePath = this.baseUrl.replace(/\/$/, '');
+      const endpointPath = endpoint.replace(/^\//, '');
+      url = basePath ? `${basePath}/${endpointPath}` : `/${endpointPath}`;
+
+      // 添加查询参数
+      if (params && Object.keys(params).length > 0) {
+        const searchParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          searchParams.append(key, String(value));
+        });
+        url += `?${searchParams.toString()}`;
+      }
     }
-    return url.toString();
+
+    return url;
   }
 
   private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {

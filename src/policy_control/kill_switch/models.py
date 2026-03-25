@@ -28,11 +28,11 @@ class KillSwitch:
         self,
         level: KillSwitchLevel,
         level_id: Optional[UUID] = None,
-    ) -&gt; bool:
+    ) -> bool:
         """
         检查此熔断是否适用于给定的级别
 
-        熔断覆盖逻辑：Global &gt; Profile &gt; Thread
+        熔断覆盖逻辑：Global > Profile > Thread
         """
         if not self.is_active:
             return False

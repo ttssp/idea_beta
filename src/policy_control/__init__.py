@@ -1,6 +1,6 @@
 
 """
-Policy &amp; Control Module
+Policy & Control Module
 
 This module provides:
 - Delegation Runtime: 委托档位管理、预算管理
