@@ -5,14 +5,15 @@ Messages API
 API endpoints for message drafting and sending.
 """
 
-from typing import Dict, Any
+from typing import Any
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..deps import get_db, get_idempotency_manager
 from ...action_runtime.engine import ActionRunEngine
 from ...core.idempotency import IdempotencyManager
+from ..deps import get_db, get_idempotency_manager
 
 router = APIRouter(prefix="/threads/{thread_id}/messages", tags=["messages"])
 
@@ -20,10 +21,10 @@ router = APIRouter(prefix="/threads/{thread_id}/messages", tags=["messages"])
 @router.post(":draft")
 async def draft_message(
     thread_id: UUID,
-    request: Dict[str, Any],
+    request: dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     起草消息（挂载到thread）
     """
@@ -67,10 +68,10 @@ async def draft_message(
 @router.post(":send")
 async def send_message(
     thread_id: UUID,
-    request: Dict[str, Any],
+    request: dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     发送消息（通过egress）
     """

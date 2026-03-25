@@ -3,7 +3,6 @@
  */
 
 import type { DraftMessageRequest, DraftMessageResponse } from '../../types/api.js';
-import type { ThreadContext } from '../../types/thread.js';
 import { llmClient } from '../../llm/client.js';
 import { promptLibrary } from '../../prompts/library.js';
 import { logger } from '../../utils/logger.js';
@@ -98,7 +97,7 @@ export class MessageGenerator {
 
   private parseEmailOutput(content: string): DraftMessageResponse['draft'] {
     const subjectMatch = content.match(/^Subject[:：]\s*(.+)$/im);
-    let subject = subjectMatch ? subjectMatch[1].trim() : '关于' + content.substring(0, 30);
+    const subject = subjectMatch ? subjectMatch[1].trim() : '关于' + content.substring(0, 30);
 
     let body = content
       .replace(/^Subject[:：].*$/im, '')

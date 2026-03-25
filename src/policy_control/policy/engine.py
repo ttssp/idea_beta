@@ -4,12 +4,11 @@ Policy Engine Core Logic
 
 规则匹配、优先级排序、冲突解决
 """
-from typing import List, Optional, Dict, Any
-from uuid import UUID
 from datetime import datetime
+from typing import Any
+from uuid import UUID
 
-from ..common.constants import PolicyEffect, PolicyScope, Decision
-from ..common.exceptions import PolicyRuleConflictError
+from ..common.constants import Decision, PolicyEffect, PolicyScope
 from ..common.types import PolicyContext, PolicyDecision
 from .models import PolicyRule
 
@@ -40,7 +39,7 @@ class ConflictResolver:
         PolicyScope.GLOBAL: 25,
     }
 
-    def resolve(self, rules: List[PolicyRule]) -> PolicyRule:
+    def resolve(self, rules: list[PolicyRule]) -> PolicyRule:
         """
         从冲突规则中选出获胜者
 
@@ -74,7 +73,7 @@ class PolicyEngine:
     """策略引擎"""
 
     def __init__(self):
-        self._rules: Dict[UUID, PolicyRule] = {}
+        self._rules: dict[UUID, PolicyRule] = {}
         self._conflict_resolver = ConflictResolver()
 
     def add_rule(self, rule: PolicyRule) -> PolicyRule:
@@ -82,11 +81,11 @@ class PolicyEngine:
         self._rules[rule.id] = rule
         return rule
 
-    def get_rule(self, rule_id: UUID) -> Optional[PolicyRule]:
+    def get_rule(self, rule_id: UUID) -> PolicyRule | None:
         """获取策略规则"""
         return self._rules.get(rule_id)
 
-    def update_rule(self, rule_id: UUID, **kwargs) -> Optional[PolicyRule]:
+    def update_rule(self, rule_id: UUID, **kwargs) -> PolicyRule | None:
         """更新策略规则"""
         rule = self._rules.get(rule_id)
         if not rule:
@@ -107,10 +106,10 @@ class PolicyEngine:
 
     def list_rules(
         self,
-        scope: Optional[PolicyScope] = None,
-        scope_id: Optional[UUID] = None,
+        scope: PolicyScope | None = None,
+        scope_id: UUID | None = None,
         active_only: bool = True,
-    ) -> List[PolicyRule]:
+    ) -> list[PolicyRule]:
         """列出策略规则"""
         rules = list(self._rules.values())
 
@@ -129,11 +128,11 @@ class PolicyEngine:
 
     def match_rules(
         self,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         action: str,
-        scope: Optional[PolicyScope] = None,
-        scope_id: Optional[UUID] = None,
-    ) -> List[PolicyRule]:
+        scope: PolicyScope | None = None,
+        scope_id: UUID | None = None,
+    ) -> list[PolicyRule]:
         """
         匹配适用的策略规则
 

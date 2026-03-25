@@ -4,7 +4,7 @@ Relationship Risk Evaluator
 
 关系风险评估器
 """
-from typing import Dict, Optional
+
 from ..common.constants import RiskLevel
 from .models import RiskEvaluationResult
 
@@ -36,8 +36,8 @@ class RelationshipRiskEvaluator:
 
     def evaluate(
         self,
-        relationship_class: Optional[str] = None,
-        relationship: Optional[Dict] = None,
+        relationship_class: str | None = None,
+        relationship: dict | None = None,
     ) -> RiskEvaluationResult:
         """
         评估关系风险

@@ -5,18 +5,15 @@ Gmail Channel Adapter
 Implements the ChannelAdapter interface for Gmail.
 """
 
-from typing import Optional, List, Dict, Any
 import base64
-import json
 import logging
-from datetime import datetime
+from typing import Any
 
 from ..base import (
     ChannelAdapter,
     ChannelMessage,
-    ChannelError,
     RetryableChannelError,
-    TerminalChannelError
+    TerminalChannelError,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +26,7 @@ class GmailAdapter(ChannelAdapter):
     支持发送和接收Gmail邮件
     """
 
-    def __init__(self, credentials: Optional[Any] = None):
+    def __init__(self, credentials: Any | None = None):
         """
         初始化Gmail适配器
 
@@ -53,9 +50,9 @@ class GmailAdapter(ChannelAdapter):
 
     async def send_message(
         self,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         idempotency_key: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         发送邮件
 
@@ -85,9 +82,9 @@ class GmailAdapter(ChannelAdapter):
 
         try:
             # 创建MIME消息
-            from email.mime.text import MIMEText
-            from email.mime.multipart import MIMEMultipart
             import email.utils
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
 
             msg = MIMEMultipart()
             msg['to'] = payload.get('to', '')
@@ -137,7 +134,7 @@ class GmailAdapter(ChannelAdapter):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -> Optional[ChannelMessage]:
+    ) -> ChannelMessage | None:
         """
         获取单条消息
 
@@ -168,7 +165,7 @@ class GmailAdapter(ChannelAdapter):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -> List[ChannelMessage]:
+    ) -> list[ChannelMessage]:
         """
         获取线程内所有消息
 
@@ -245,7 +242,7 @@ class GmailAdapter(ChannelAdapter):
         logger.warning("Gmail webhook signature validation is simplified in dev mode")
         return True
 
-    def _parse_message(self, msg: Dict[str, Any]) -> Optional[ChannelMessage]:
+    def _parse_message(self, msg: dict[str, Any]) -> ChannelMessage | None:
         """
         解析Gmail API返回的消息
 
@@ -258,7 +255,7 @@ class GmailAdapter(ChannelAdapter):
         payload = msg.get('payload', {})
         headers = payload.get('headers', [])
 
-        def get_header(name: str) -> Optional[str]:
+        def get_header(name: str) -> str | None:
             for h in headers:
                 if h.get('name', '').lower() == name.lower():
                     return h.get('value')

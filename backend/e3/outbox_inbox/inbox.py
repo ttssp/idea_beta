@@ -5,18 +5,15 @@ Inbox Pattern - Processor
 Implements the inbox pattern for receiving external events.
 """
 
-from typing import Optional, Dict, Any, Tuple
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
-from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from .models import (
-    InboxEvent,
-    InboxStatusEnum,
-    ChannelTypeEnum
-)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..core.idempotency import IdempotencyManager
+from .models import InboxEvent, InboxStatusEnum
 
 
 class InboxProcessor:
@@ -34,13 +31,13 @@ class InboxProcessor:
         self,
         channel_type: str,
         event_type: str,
-        external_thread_key: Optional[str],
+        external_thread_key: str | None,
         external_message_key: str,
-        payload: Dict[str, Any],
-        raw_payload: Optional[bytes] = None,
-        webhook_signature: Optional[str] = None,
-        webhook_timestamp: Optional[datetime] = None,
-    ) -> Tuple[InboxEvent, bool]:
+        payload: dict[str, Any],
+        raw_payload: bytes | None = None,
+        webhook_signature: str | None = None,
+        webhook_timestamp: datetime | None = None,
+    ) -> tuple[InboxEvent, bool]:
         """
         接收外部事件，写入Inbox
 
@@ -95,7 +92,7 @@ class InboxProcessor:
             status=InboxStatusEnum.PENDING,
             webhook_signature=webhook_signature,
             webhook_timestamp=webhook_timestamp,
-            received_at=datetime.utcnow()
+            received_at=datetime.now(UTC)
         )
         self.db.add(event)
         await self.db.commit()
@@ -103,7 +100,7 @@ class InboxProcessor:
 
         return event, True
 
-    async def mark_processing(self, event_id: UUID) -> Optional[InboxEvent]:
+    async def mark_processing(self, event_id: UUID) -> InboxEvent | None:
         """标记事件为处理中"""
         result = await self.db.execute(
             select(InboxEvent)
@@ -123,7 +120,7 @@ class InboxProcessor:
     async def mark_processed(
         self,
         event_id: UUID,
-        resolved_thread_id: Optional[UUID] = None
+        resolved_thread_id: UUID | None = None
     ) -> InboxEvent:
         """标记事件为已处理"""
         result = await self.db.execute(
@@ -132,7 +129,7 @@ class InboxProcessor:
         event = result.scalar_one()
         event.status = InboxStatusEnum.PROCESSED
         event.resolved_thread_id = resolved_thread_id
-        event.processed_at = datetime.utcnow()
+        event.processed_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(event)
         return event
@@ -149,7 +146,7 @@ class InboxProcessor:
         event = result.scalar_one()
         event.status = InboxStatusEnum.FAILED
         event.error_message = error_message
-        event.processed_at = datetime.utcnow()
+        event.processed_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(event)
         return event
@@ -161,7 +158,7 @@ class InboxProcessor:
         )
         event = result.scalar_one()
         event.status = InboxStatusEnum.IGNORED
-        event.processed_at = datetime.utcnow()
+        event.processed_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(event)
         return event
@@ -169,7 +166,7 @@ class InboxProcessor:
     async def get_pending_events(
         self,
         limit: int = 100,
-        channel_type: Optional[str] = None
+        channel_type: str | None = None
     ) -> list[InboxEvent]:
         """获取待处理的事件"""
         query = (
@@ -184,10 +181,9 @@ class InboxProcessor:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_inbox_event(self, event_id: UUID) -> Optional[InboxEvent]:
+    async def get_inbox_event(self, event_id: UUID) -> InboxEvent | None:
         """获取Inbox事件"""
         result = await self.db.execute(
             select(InboxEvent).where(InboxEvent.id == event_id)
         )
         return result.scalar_one_or_none()
-

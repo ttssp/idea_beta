@@ -11,11 +11,10 @@ for the Agent-Native Communication Control Layer.
 # ============================================================================
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
 from datetime import datetime
 from enum import Enum
-
+from typing import Any
+from uuid import UUID, uuid4
 
 # ============================================================================
 # Enums - Core Constants
@@ -132,11 +131,11 @@ class DelegationProfile:
     id: UUID = field(default_factory=uuid4)
     name: str = ""
     display_name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
     profile_level: DelegationLevel = DelegationLevel.OBSERVE_ONLY
     allowed_actions: list = field(default_factory=list)
-    budget_config: Optional[Dict[str, Any]] = None
-    escalation_rules: Optional[Dict[str, Any]] = None
+    budget_config: dict[str, Any] | None = None
+    escalation_rules: dict[str, Any] | None = None
     is_system_defined: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
@@ -147,17 +146,17 @@ class PolicyRule:
     """策略规则模型"""
     id: UUID = field(default_factory=uuid4)
     name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
     scope: PolicyScope = PolicyScope.GLOBAL
-    scope_id: Optional[UUID] = None
+    scope_id: UUID | None = None
     action: str = ""
     effect: PolicyEffect = PolicyEffect.ALLOW
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     priority: int = 0
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    created_by: Optional[UUID] = None
+    created_by: UUID | None = None
 
 
 @dataclass
@@ -165,18 +164,18 @@ class ApprovalRequest:
     """审批请求模型"""
     id: UUID = field(default_factory=uuid4)
     thread_id: UUID = field(default_factory=uuid4)
-    action_run_id: Optional[UUID] = None
+    action_run_id: UUID | None = None
     request_type: str = "message_send"
     reason_code: str = ""
-    reason_description: Optional[str] = None
+    reason_description: str | None = None
     requester_principal_id: UUID = field(default_factory=uuid4)
-    approver_principal_id: Optional[UUID] = None
+    approver_principal_id: UUID | None = None
     status: ApprovalStatus = ApprovalStatus.PENDING
-    preview: Optional[Dict] = None
-    resolution: Optional[Dict] = None
-    resolved_at: Optional[datetime] = None
-    resolved_by: Optional[UUID] = None
-    timeout_at: Optional[datetime] = None
+    preview: dict | None = None
+    resolution: dict | None = None
+    resolved_at: datetime | None = None
+    resolved_by: UUID | None = None
+    timeout_at: datetime | None = None
     timeout_action: str = "escalate"
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
@@ -187,7 +186,7 @@ class RiskAssessment:
     """风险评估记录"""
     id: UUID = field(default_factory=uuid4)
     thread_id: UUID = field(default_factory=uuid4)
-    action_run_id: Optional[UUID] = None
+    action_run_id: UUID | None = None
     relationship_risk: int = 1
     action_risk: int = 1
     content_risk: int = 1
@@ -203,13 +202,13 @@ class KillSwitch:
     """熔断开关模型"""
     id: UUID = field(default_factory=uuid4)
     level: KillSwitchLevel = KillSwitchLevel.THREAD
-    level_id: Optional[UUID] = None
+    level_id: UUID | None = None
     reason: str = ""
     activated_by: UUID = field(default_factory=uuid4)
     is_active: bool = True
     activated_at: datetime = field(default_factory=datetime.utcnow)
-    deactivated_at: Optional[datetime] = None
-    deactivated_by: Optional[UUID] = None
+    deactivated_at: datetime | None = None
+    deactivated_by: UUID | None = None
 
 
 @dataclass
@@ -217,12 +216,12 @@ class DecisionTrace:
     """决策追踪记录"""
     id: UUID = field(default_factory=uuid4)
     thread_id: UUID = field(default_factory=uuid4)
-    action_run_id: Optional[UUID] = None
+    action_run_id: UUID | None = None
     decision: Decision = Decision.ESCALATE_TO_HUMAN
-    decision_reason: Optional[str] = None
+    decision_reason: str | None = None
     steps: list = field(default_factory=list)
-    policy_hits: Optional[list] = None
-    risk_assessment_id: Optional[UUID] = None
+    policy_hits: list | None = None
+    risk_assessment_id: UUID | None = None
     kill_switch_affected: bool = False
     created_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -300,9 +299,9 @@ class DelegationService:
     """
 
     def __init__(self):
-        self._profiles: Dict[UUID, DelegationProfile] = {}
-        self._thread_bindings: Dict[UUID, UUID] = {}
-        self._relationship_bindings: Dict[UUID, UUID] = {}
+        self._profiles: dict[UUID, DelegationProfile] = {}
+        self._thread_bindings: dict[UUID, UUID] = {}
+        self._relationship_bindings: dict[UUID, UUID] = {}
         self._initialize_system_profiles()
 
     def _initialize_system_profiles(self):
@@ -320,18 +319,18 @@ class DelegationService:
             )
             self._profiles[profile.id] = profile
 
-    def get_profile(self, profile_id: UUID) -> Optional[DelegationProfile]:
+    def get_profile(self, profile_id: UUID) -> DelegationProfile | None:
         """获取委托档位"""
         return self._profiles.get(profile_id)
 
-    def get_profile_by_name(self, name: str) -> Optional[DelegationProfile]:
+    def get_profile_by_name(self, name: str) -> DelegationProfile | None:
         """通过名称获取委托档位"""
         for profile in self._profiles.values():
             if profile.name == name:
                 return profile
         return None
 
-    def list_profiles(self, include_system: bool = True) -> List[DelegationProfile]:
+    def list_profiles(self, include_system: bool = True) -> list[DelegationProfile]:
         """列出所有可用档位"""
         profiles = list(self._profiles.values())
         if not include_system:
@@ -340,8 +339,8 @@ class DelegationService:
 
     def get_effective_profile(
         self,
-        thread_id: Optional[UUID] = None,
-        relationship_id: Optional[UUID] = None,
+        thread_id: UUID | None = None,
+        relationship_id: UUID | None = None,
     ) -> DelegationProfile:
         """
         获取有效委托档位
@@ -396,7 +395,7 @@ class ApprovalService:
     """
 
     def __init__(self):
-        self._requests: Dict[UUID, ApprovalRequest] = {}
+        self._requests: dict[UUID, ApprovalRequest] = {}
 
     def create_request(
         self,
@@ -404,10 +403,10 @@ class ApprovalService:
         request_type: str,
         reason_code: str,
         requester_principal_id: UUID,
-        reason_description: Optional[str] = None,
-        action_run_id: Optional[UUID] = None,
-        approver_principal_id: Optional[UUID] = None,
-        preview: Optional[Dict] = None,
+        reason_description: str | None = None,
+        action_run_id: UUID | None = None,
+        approver_principal_id: UUID | None = None,
+        preview: dict | None = None,
     ) -> ApprovalRequest:
         """创建审批请求"""
         request = ApprovalRequest(
@@ -424,16 +423,16 @@ class ApprovalService:
         self._requests[request.id] = request
         return request
 
-    def get_request(self, request_id: UUID) -> Optional[ApprovalRequest]:
+    def get_request(self, request_id: UUID) -> ApprovalRequest | None:
         """获取审批请求"""
         return self._requests.get(request_id)
 
     def list_requests(
         self,
-        thread_id: Optional[UUID] = None,
-        status: Optional[ApprovalStatus] = None,
+        thread_id: UUID | None = None,
+        status: ApprovalStatus | None = None,
         limit: int = 100,
-    ) -> List[ApprovalRequest]:
+    ) -> list[ApprovalRequest]:
         """列出审批请求"""
         requests = list(self._requests.values())
 
@@ -450,10 +449,10 @@ class ApprovalService:
         self,
         request_id: UUID,
         action: str,
-        reason: Optional[str] = None,
-        resolved_by: Optional[UUID] = None,
-        modified_content: Optional[str] = None,
-    ) -> Optional[ApprovalRequest]:
+        reason: str | None = None,
+        resolved_by: UUID | None = None,
+        modified_content: str | None = None,
+    ) -> ApprovalRequest | None:
         """审批操作"""
         request = self._requests.get(request_id)
         if not request or request.status != ApprovalStatus.PENDING:
@@ -498,10 +497,10 @@ class RiskEvaluator:
 
     def evaluate(
         self,
-        content: Optional[str] = None,
-        relationship_class: Optional[str] = None,
-        action_type: Optional[str] = None,
-    ) -> Dict:
+        content: str | None = None,
+        relationship_class: str | None = None,
+        action_type: str | None = None,
+    ) -> dict:
         """风险评估主入口"""
         rel_risk = self._evaluate_relationship(relationship_class)
         act_risk = self._evaluate_action(action_type)
@@ -533,7 +532,7 @@ class RiskEvaluator:
             "recommendation": recommendation,
         }
 
-    def _evaluate_relationship(self, rc: Optional[str]) -> int:
+    def _evaluate_relationship(self, rc: str | None) -> int:
         """关系风险评估"""
         if rc in ["family", "core_client", "executive"]:
             return 5
@@ -543,7 +542,7 @@ class RiskEvaluator:
             return 1
         return 3
 
-    def _evaluate_action(self, at: Optional[str]) -> int:
+    def _evaluate_action(self, at: str | None) -> int:
         """动作风险评估"""
         if at in ["make_payment", "sign_contract", "make_commitment"]:
             return 5
@@ -555,7 +554,7 @@ class RiskEvaluator:
             return 2
         return 3
 
-    def _evaluate_content(self, content: Optional[str]) -> int:
+    def _evaluate_content(self, content: str | None) -> int:
         """内容风险评估（关键词/模式匹配）"""
         if not content or not content.strip():
             return 1
@@ -609,14 +608,14 @@ class KillSwitchService:
     """
 
     def __init__(self):
-        self._switches: Dict[UUID, KillSwitch] = {}
+        self._switches: dict[UUID, KillSwitch] = {}
 
     def activate(
         self,
         level: KillSwitchLevel,
         reason: str,
         activated_by: UUID,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ) -> KillSwitch:
         """激活熔断"""
         switch = KillSwitch(
@@ -633,7 +632,7 @@ class KillSwitchService:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -> Optional[KillSwitch]:
+    ) -> KillSwitch | None:
         """解除熔断"""
         switch = self._switches.get(switch_id)
         if switch and switch.is_active:
@@ -645,7 +644,7 @@ class KillSwitchService:
     def check(
         self,
         level: KillSwitchLevel,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ) -> bool:
         """检查是否有熔断生效"""
         for switch in self._switches.values():
@@ -659,8 +658,8 @@ class KillSwitchService:
 
     def get_active_switches(
         self,
-        level: Optional[KillSwitchLevel] = None,
-    ) -> List[KillSwitch]:
+        level: KillSwitchLevel | None = None,
+    ) -> list[KillSwitch]:
         """获取当前生效的熔断"""
         switches = [s for s in self._switches.values() if s.is_active]
         if level:
@@ -676,13 +675,13 @@ class DecisionRecorder:
     """
 
     def __init__(self):
-        self._traces: Dict[UUID, DecisionTrace] = {}
-        self._thread_traces: Dict[UUID, List[UUID]] = {}
+        self._traces: dict[UUID, DecisionTrace] = {}
+        self._thread_traces: dict[UUID, list[UUID]] = {}
 
     def start_trace(
         self,
         thread_id: UUID,
-        action_run_id: Optional[UUID] = None,
+        action_run_id: UUID | None = None,
     ) -> DecisionTrace:
         """开始记录决策追踪"""
         trace = DecisionTrace(
@@ -702,8 +701,8 @@ class DecisionRecorder:
         trace: DecisionTrace,
         decision: Decision,
         decision_reason: str,
-        policy_hits: Optional[list] = None,
-        risk_assessment_id: Optional[UUID] = None,
+        policy_hits: list | None = None,
+        risk_assessment_id: UUID | None = None,
         kill_switch_affected: bool = False,
     ) -> DecisionTrace:
         """完成决策追踪记录"""
@@ -714,7 +713,7 @@ class DecisionRecorder:
         trace.kill_switch_affected = kill_switch_affected
         return trace
 
-    def get_trace(self, trace_id: UUID) -> Optional[DecisionTrace]:
+    def get_trace(self, trace_id: UUID) -> DecisionTrace | None:
         """获取决策追踪"""
         return self._traces.get(trace_id)
 
@@ -722,7 +721,7 @@ class DecisionRecorder:
         self,
         thread_id: UUID,
         limit: int = 100,
-    ) -> List[DecisionTrace]:
+    ) -> list[DecisionTrace]:
         """获取线程的决策追踪列表"""
         trace_ids = self._thread_traces.get(thread_id, [])
         traces = [self._traces.get(tid) for tid in trace_ids if tid in self._traces]
@@ -762,13 +761,13 @@ class PolicyControlController:
         thread_id: UUID,
         action: str,
         action_type: str,
-        content: Optional[str] = None,
-        relationship_class: Optional[str] = None,
-        relationship_id: Optional[UUID] = None,
-        thread_objective: Optional[str] = None,
-        thread_status: Optional[str] = None,
-        action_run_id: Optional[UUID] = None,
-    ) -> Dict:
+        content: str | None = None,
+        relationship_class: str | None = None,
+        relationship_id: UUID | None = None,
+        thread_objective: str | None = None,
+        thread_status: str | None = None,
+        action_run_id: UUID | None = None,
+    ) -> dict:
         """
         8步决策链主入口
 

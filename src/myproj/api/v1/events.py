@@ -1,14 +1,12 @@
 """Event API 端点"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from myproj.api.deps import Pagination, get_event_id, get_thread_id
-from myproj.api.exceptions import NotFoundError
+from myproj.api.deps import get_thread_id
 from myproj.core.domain.event import EventType, ThreadEvent
 from myproj.core.domain.thread import ThreadId
 from myproj.core.services.thread_service import ThreadService
@@ -27,10 +25,10 @@ class EventResponseSchema(BaseModel):
     occurred_at: datetime
     sequence_number: int
     title: str
-    description: Optional[str]
+    description: str | None
     payload: dict
-    thread_status_before: Optional[str]
-    thread_status_after: Optional[str]
+    thread_status_before: str | None
+    thread_status_after: str | None
     is_replayed: bool
 
     @classmethod
@@ -52,7 +50,7 @@ class EventResponseSchema(BaseModel):
 
 class EventListResponseSchema(BaseModel):
     """Event列表响应"""
-    items: List[EventResponseSchema]
+    items: list[EventResponseSchema]
     total: int
     offset: int
     limit: int
@@ -60,7 +58,7 @@ class EventListResponseSchema(BaseModel):
 
 class TimelineResponseSchema(BaseModel):
     """时间线响应"""
-    items: List[dict]
+    items: list[dict]
     total: int
 
 
@@ -71,15 +69,12 @@ class EventSummaryResponseSchema(BaseModel):
     messages: int
     approvals: int
     risks: int
-    first_event_at: Optional[str]
-    last_event_at: Optional[str]
+    first_event_at: str | None
+    last_event_at: str | None
 
 
-# ============================================
-# 服务
-# ============================================
-
-from myproj.api.v1.threads import _thread_service
+# 共享的事件服务实例
+_thread_service = ThreadService()
 
 
 # ============================================
@@ -93,9 +88,9 @@ from myproj.api.v1.threads import _thread_service
 )
 async def list_events(
     thread_id: UUID = Depends(get_thread_id),
-    event_type: Optional[List[EventType]] = Query(None, description="事件类型过滤"),
-    from_sequence: Optional[int] = Query(None, description="起始序列号"),
-    to_sequence: Optional[int] = Query(None, description="结束序列号"),
+    event_type: list[EventType] | None = Query(None, description="事件类型过滤"),
+    from_sequence: int | None = Query(None, description="起始序列号"),
+    to_sequence: int | None = Query(None, description="结束序列号"),
     limit: int = Query(100, ge=1, le=1000, description="返回数量限制"),
     offset: int = Query(0, ge=0, description="偏移量"),
     reverse: bool = Query(False, description="是否倒序"),
@@ -109,13 +104,11 @@ async def list_events(
         from_sequence=from_sequence,
         to_sequence=to_sequence,
         event_types=event_type,
-        limit=limit + 1,  # 多查一个用于判断是否还有更多
         reverse=reverse,
     )
 
-    total = event_store.count_by_thread(tid)
-    has_more = len(events) > limit
-    items = events[:limit] if has_more else events
+    total = len(events)
+    items = events[offset : offset + limit]
 
     return EventListResponseSchema(
         items=[EventResponseSchema.from_domain(e) for e in items],
@@ -165,12 +158,12 @@ async def get_event_summary(
 
 @router.get(
     "/status-history",
-    response_model=List[dict],
+    response_model=list[dict],
     summary="获取状态变更历史",
 )
 async def get_status_history(
     thread_id: UUID = Depends(get_thread_id),
-) -> List[dict]:
+) -> list[dict]:
     """获取Thread的状态变更历史"""
     tid = ThreadId(value=thread_id)
     event_store = _thread_service.get_event_store()

@@ -3,9 +3,8 @@
 Kill Switch Data Models
 """
 from dataclasses import dataclass, field
-from typing import Optional
-from uuid import UUID, uuid4
 from datetime import datetime
+from uuid import UUID, uuid4
 
 from ..common.constants import KillSwitchLevel
 
@@ -16,18 +15,18 @@ class KillSwitch:
 
     id: UUID = field(default_factory=uuid4)
     level: KillSwitchLevel = KillSwitchLevel.THREAD
-    level_id: Optional[UUID] = None
+    level_id: UUID | None = None
     reason: str = ""
     activated_by: UUID = field(default_factory=uuid4)
     is_active: bool = True
     activated_at: datetime = field(default_factory=datetime.utcnow)
-    deactivated_at: Optional[datetime] = None
-    deactivated_by: Optional[UUID] = None
+    deactivated_at: datetime | None = None
+    deactivated_by: UUID | None = None
 
     def applies_to(
         self,
         level: KillSwitchLevel,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ) -> bool:
         """
         检查此熔断是否适用于给定的级别

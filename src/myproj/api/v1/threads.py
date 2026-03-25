@@ -1,22 +1,21 @@
 """Thread API 端点"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from pydantic import BaseModel, Field
 
 from myproj.api.deps import DbSession, Pagination, get_thread_id
 from myproj.api.exceptions import NotFoundError, StateTransitionError
 from myproj.core.domain.thread import (
+    DelegationLevel,
+    DelegationProfile,
+    RiskLevel,
     Thread,
     ThreadId,
-    ThreadStatus,
     ThreadObjective,
-    DelegationProfile,
-    DelegationLevel,
-    RiskLevel,
+    ThreadStatus,
 )
 from myproj.core.repositories.thread_repository import ThreadRepository
 
@@ -30,8 +29,8 @@ router = APIRouter(prefix="/threads", tags=["threads"])
 class ThreadObjectiveSchema(BaseModel):
     """Thread目标"""
     title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=2000)
-    due_at: Optional[datetime] = None
+    description: str | None = Field(None, max_length=2000)
+    due_at: datetime | None = None
 
 
 class DelegationProfileSchema(BaseModel):
@@ -41,7 +40,7 @@ class DelegationProfileSchema(BaseModel):
     max_actions_per_hour: int = 10
     max_messages_per_thread: int = 50
     max_consecutive_touches: int = 3
-    allowed_actions: List[str] = Field(default_factory=list)
+    allowed_actions: list[str] = Field(default_factory=list)
     escalation_rules: dict = Field(default_factory=dict)
 
 
@@ -49,19 +48,19 @@ class ThreadCreateSchema(BaseModel):
     """创建Thread请求"""
     objective: ThreadObjectiveSchema
     owner_id: UUID
-    delegation_profile: Optional[DelegationProfileSchema] = None
-    participant_ids: List[UUID] = Field(default_factory=list)
-    tags: List[str] = Field(default_factory=list)
+    delegation_profile: DelegationProfileSchema | None = None
+    participant_ids: list[UUID] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class ThreadUpdateSchema(BaseModel):
     """更新Thread请求"""
-    objective: Optional[ThreadObjectiveSchema] = None
-    summary: Optional[str] = Field(None, max_length=500)
-    risk_level: Optional[RiskLevel] = None
-    delegation_profile: Optional[DelegationProfileSchema] = None
-    add_participant_ids: List[UUID] = Field(default_factory=list)
-    remove_participant_ids: List[UUID] = Field(default_factory=list)
+    objective: ThreadObjectiveSchema | None = None
+    summary: str | None = Field(None, max_length=500)
+    risk_level: RiskLevel | None = None
+    delegation_profile: DelegationProfileSchema | None = None
+    add_participant_ids: list[UUID] = Field(default_factory=list)
+    remove_participant_ids: list[UUID] = Field(default_factory=list)
 
 
 class ThreadResponseSchema(BaseModel):
@@ -70,15 +69,15 @@ class ThreadResponseSchema(BaseModel):
     objective: ThreadObjectiveSchema
     status: ThreadStatus
     risk_level: RiskLevel
-    delegation_profile: Optional[DelegationProfileSchema]
+    delegation_profile: DelegationProfileSchema | None
     owner_id: UUID
-    responsible_principal_id: Optional[UUID]
-    participant_ids: List[UUID]
-    summary: Optional[str]
-    tags: List[str]
+    responsible_principal_id: UUID | None
+    participant_ids: list[UUID]
+    summary: str | None
+    tags: list[str]
     created_at: datetime
     updated_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
     version: int
 
     @classmethod
@@ -115,7 +114,7 @@ class ThreadResponseSchema(BaseModel):
 
 class ThreadListResponseSchema(BaseModel):
     """Thread列表响应"""
-    items: List[ThreadResponseSchema]
+    items: list[ThreadResponseSchema]
     total: int
     offset: int
     limit: int
@@ -134,7 +133,7 @@ class ThreadListResponseSchema(BaseModel):
 )
 async def create_thread(
     data: ThreadCreateSchema,
-    db: DbSession = Depends(),
+    db: DbSession,
 ) -> ThreadResponseSchema:
     """创建新的Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -176,12 +175,12 @@ async def create_thread(
     summary="查询线程列表",
 )
 async def list_threads(
-    owner_id: Optional[UUID] = Query(None, description="所有者ID过滤"),
-    status: Optional[List[ThreadStatus]] = Query(None, description="状态过滤"),
-    risk_level: Optional[List[RiskLevel]] = Query(None, description="风险等级过滤"),
-    tags: Optional[List[str]] = Query(None, description="标签过滤"),
-    pagination: Pagination = Depends(),
-    db: DbSession = Depends(),
+    pagination: Pagination,
+    db: DbSession,
+    owner_id: UUID | None = Query(None, description="所有者ID过滤"),
+    status: list[ThreadStatus] | None = Query(None, description="状态过滤"),
+    risk_level: list[RiskLevel] | None = Query(None, description="风险等级过滤"),
+    tags: list[str] | None = Query(None, description="标签过滤"),
 ) -> ThreadListResponseSchema:
     """查询Thread列表，支持过滤和分页 - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -191,13 +190,29 @@ async def list_threads(
             owner_id=owner_id,
             statuses=status,
             risk_levels=risk_level,
+            tags=tags,
             offset=pagination.offset,
             limit=pagination.limit,
         )
-        total = repo.count_by_owner(owner_id=owner_id, statuses=status)
+        total = repo.count_by_owner(
+            owner_id=owner_id,
+            statuses=status,
+            risk_levels=risk_level,
+            tags=tags,
+        )
     else:
-        threads = repo.list(offset=pagination.offset, limit=pagination.limit)
-        total = repo.count()
+        threads = repo.find_all(
+            statuses=status,
+            risk_levels=risk_level,
+            tags=tags,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        )
+        total = repo.count_filtered(
+            statuses=status,
+            risk_levels=risk_level,
+            tags=tags,
+        )
 
     return ThreadListResponseSchema(
         items=[ThreadResponseSchema.from_domain(t) for t in threads],
@@ -213,8 +228,8 @@ async def list_threads(
     summary="查询线程详情",
 )
 async def get_thread(
+    db: DbSession,
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """获取Thread详情 - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -232,9 +247,9 @@ async def get_thread(
     summary="更新线程",
 )
 async def update_thread(
+    db: DbSession,
     data: ThreadUpdateSchema,
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """更新Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -248,11 +263,11 @@ async def update_thread(
 
     # 更新目标
     if data.objective:
-        thread.objective = ThreadObjective(
+        thread.update_objective(ThreadObjective(
             title=data.objective.title,
             description=data.objective.description,
             due_at=data.objective.due_at,
-        )
+        ))
 
     # 更新摘要
     if data.summary is not None:
@@ -260,11 +275,11 @@ async def update_thread(
 
     # 更新风险等级
     if data.risk_level:
-        thread.risk_level = data.risk_level
+        thread.set_risk_level(data.risk_level)
 
     # 更新委托档位
     if data.delegation_profile:
-        thread.delegation_profile = DelegationProfile(
+        thread.set_delegation_profile(DelegationProfile(
             profile_name=data.delegation_profile.profile_name,
             level=data.delegation_profile.level,
             max_actions_per_hour=data.delegation_profile.max_actions_per_hour,
@@ -272,7 +287,7 @@ async def update_thread(
             max_consecutive_touches=data.delegation_profile.max_consecutive_touches,
             allowed_actions=data.delegation_profile.allowed_actions,
             escalation_rules=data.delegation_profile.escalation_rules,
-        )
+        ))
 
     # 添加参与者
     for pid in data.add_participant_ids:
@@ -292,8 +307,8 @@ async def update_thread(
     summary="暂停线程",
 )
 async def pause_thread(
+    db: DbSession,
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """暂停Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -317,8 +332,8 @@ async def pause_thread(
     summary="恢复线程",
 )
 async def resume_thread(
+    db: DbSession,
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """恢复Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -342,9 +357,9 @@ async def resume_thread(
     summary="接管线程",
 )
 async def takeover_thread(
+    db: DbSession,
     reason: str = Body(..., embed=True, min_length=1),
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """接管Thread - 升级到人工主导 - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -368,8 +383,8 @@ async def takeover_thread(
     summary="完成线程",
 )
 async def complete_thread(
+    db: DbSession,
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """完成Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)
@@ -393,9 +408,9 @@ async def complete_thread(
     summary="取消线程",
 )
 async def cancel_thread(
-    reason: Optional[str] = Body(None, embed=True),
+    db: DbSession,
+    reason: str | None = Body(None, embed=True),
     thread_id: UUID = Depends(get_thread_id),
-    db: DbSession = Depends(),
 ) -> ThreadResponseSchema:
     """取消Thread - 使用数据库仓储"""
     repo = ThreadRepository(db)

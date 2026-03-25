@@ -6,7 +6,8 @@ Defines the unified interface that all channel adapters must implement.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -14,14 +15,14 @@ class ChannelMessage(BaseModel):
     """统一的通道消息格式"""
     id: str = Field(..., description="外部消息ID")
     thread_key: str = Field(..., description="外部线程Key")
-    sender: Dict[str, str] = Field(..., description="发送者信息 {'email': ...}")
-    recipients: List[Dict[str, str]] = Field(..., description="接收者列表")
-    subject: Optional[str] = Field(None, description="主题")
+    sender: dict[str, str] = Field(..., description="发送者信息 {'email': ...}")
+    recipients: list[dict[str, str]] = Field(..., description="接收者列表")
+    subject: str | None = Field(None, description="主题")
     body: str = Field(..., description="消息正文")
     sent_at: str = Field(..., description="发送时间（ISO格式）")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="元数据")
-    in_reply_to: Optional[str] = Field(None, description="回复的消息ID")
-    references: Optional[str] = Field(None, description="引用链")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="元数据")
+    in_reply_to: str | None = Field(None, description="回复的消息ID")
+    references: str | None = Field(None, description="引用链")
 
 
 class ChannelAdapter(ABC):
@@ -34,9 +35,9 @@ class ChannelAdapter(ABC):
     @abstractmethod
     async def send_message(
         self,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         idempotency_key: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         发送消息
 
@@ -57,7 +58,7 @@ class ChannelAdapter(ABC):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -> Optional[ChannelMessage]:
+    ) -> ChannelMessage | None:
         """
         获取单条消息
 
@@ -73,7 +74,7 @@ class ChannelAdapter(ABC):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -> List[ChannelMessage]:
+    ) -> list[ChannelMessage]:
         """
         获取线程内所有消息
 

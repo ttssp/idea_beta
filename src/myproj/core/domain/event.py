@@ -2,14 +2,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.thread import ThreadId, ThreadStatus
-
 
 # ============================================
 # 值对象 (Value Objects)
@@ -121,26 +120,26 @@ class ThreadEvent(BaseModel):
     sequence_number: int = 0
 
     # 执行者
-    actor_principal_id: Optional[PrincipalId] = None
-    actor_type: Optional[str] = Field(None, max_length=50)
+    actor_principal_id: PrincipalId | None = None
+    actor_type: str | None = Field(None, max_length=50)
 
     # 因果关系
-    causal_event_id: Optional[EventId] = None
-    causal_ref: Optional[str] = Field(None, max_length=255)
+    causal_event_id: EventId | None = None
+    causal_ref: str | None = Field(None, max_length=255)
 
     # 事件内容
     title: str = Field(..., min_length=1, max_length=500)
-    description: Optional[str] = Field(None, max_length=2000)
+    description: str | None = Field(None, max_length=2000)
 
     # 结构化数据
     payload: dict[str, Any] = Field(default_factory=dict)
 
     # 状态快照（可选，用于回放）
-    thread_status_before: Optional[ThreadStatus] = None
-    thread_status_after: Optional[ThreadStatus] = None
+    thread_status_before: ThreadStatus | None = None
+    thread_status_after: ThreadStatus | None = None
 
     # 幂等性
-    idempotency_key: Optional[str] = Field(None, max_length=255)
+    idempotency_key: str | None = Field(None, max_length=255)
 
     # 元数据
     is_replayed: bool = False
@@ -153,8 +152,8 @@ class ThreadEvent(BaseModel):
     def create_thread_created(
         cls,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
-        objective: Optional[str] = None,
+        actor_id: PrincipalId | None = None,
+        objective: str | None = None,
     ) -> "ThreadEvent":
         """创建线程创建事件"""
         return cls(
@@ -172,8 +171,8 @@ class ThreadEvent(BaseModel):
         thread_id: ThreadId,
         from_status: ThreadStatus,
         to_status: ThreadStatus,
-        actor_id: Optional[PrincipalId] = None,
-        reason: Optional[str] = None,
+        actor_id: PrincipalId | None = None,
+        reason: str | None = None,
     ) -> "ThreadEvent":
         """创建状态变更事件"""
         return cls(
@@ -196,8 +195,8 @@ class ThreadEvent(BaseModel):
         cls,
         thread_id: ThreadId,
         message_id: UUID,
-        actor_id: Optional[PrincipalId] = None,
-        authored_mode: Optional[str] = None,
+        actor_id: PrincipalId | None = None,
+        authored_mode: str | None = None,
     ) -> "ThreadEvent":
         """创建消息发送事件"""
         return cls(
@@ -216,7 +215,7 @@ class ThreadEvent(BaseModel):
         cls,
         thread_id: ThreadId,
         reason: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> "ThreadEvent":
         """创建升级事件"""
         return cls(
@@ -235,7 +234,7 @@ class ThreadEvent(BaseModel):
         policy_id: str,
         policy_name: str,
         decision: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> "ThreadEvent":
         """创建策略命中事件"""
         return cls(
@@ -256,7 +255,7 @@ class ThreadEvent(BaseModel):
         thread_id: ThreadId,
         risk_level: str,
         risk_reason: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> "ThreadEvent":
         """创建风险检测事件"""
         return cls(

@@ -3,9 +3,9 @@
 Policy Engine Data Models
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
 from ..common.constants import PolicyEffect, PolicyScope
 
@@ -16,19 +16,19 @@ class PolicyRule:
 
     id: UUID = field(default_factory=uuid4)
     name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
     scope: PolicyScope = PolicyScope.GLOBAL
-    scope_id: Optional[UUID] = None
+    scope_id: UUID | None = None
     action: str = ""
     effect: PolicyEffect = PolicyEffect.ALLOW
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
     priority: int = 0
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    created_by: Optional[UUID] = None
+    created_by: UUID | None = None
 
-    def matches(self, context: Dict[str, Any]) -> bool:
+    def matches(self, context: dict[str, Any]) -> bool:
         """
         检查规则是否匹配上下文
 

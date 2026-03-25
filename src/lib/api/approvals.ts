@@ -32,12 +32,12 @@ const realApi = {
   getApprovals: async (): Promise<ApprovalRequest[]> => {
     throw new Error('Not implemented');
   },
-  getApproval: async (id: string): Promise<ApprovalRequest> => {
+  getApproval: async (_id: string): Promise<ApprovalRequest> => {
     throw new Error('Not implemented');
   },
   resolveApproval: async (
-    id: string,
-    resolution: ApprovalResolution
+    _id: string,
+    _resolution: ApprovalResolution
   ): Promise<ApprovalRequest> => {
     throw new Error('Not implemented');
   },

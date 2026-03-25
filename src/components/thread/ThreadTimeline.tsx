@@ -26,7 +26,7 @@ export function ThreadTimeline({ events, className }: ThreadTimelineProps) {
     <div className={cn('relative pl-8', className)}>
       <div className="absolute left-3 top-4 bottom-4 w-0.5 bg-border" />
 
-      {events.map((event, index) => (
+      {events.map((event) => (
         <div key={event.id} className="relative pb-8">
           <div className="absolute left-[-20px] top-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted">
             <div className={cn('h-2 w-2 rounded-full', getEventDotColor(event.eventType))} />

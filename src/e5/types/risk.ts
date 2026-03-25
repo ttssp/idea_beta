@@ -3,6 +3,8 @@
  * 与E2 Risk Engine对接
  */
 
+import type { ThreadContext } from './thread.js';
+
 export type RiskTag =
   | 'amount_mentioned'
   | 'commitment_made'
@@ -26,7 +28,7 @@ export interface RiskClassification {
 
 export interface ClassifyRiskRequest {
   content: string;
-  threadContext?: Partial<import('./thread.js').ThreadContext>;
+  threadContext?: Partial<ThreadContext>;
   contextType?: 'email' | 'message' | 'draft' | 'plan';
 }
 

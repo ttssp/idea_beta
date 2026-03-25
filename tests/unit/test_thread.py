@@ -6,17 +6,16 @@ from uuid import uuid4
 import pytest
 
 from myproj.core.domain.thread import (
+    VALID_TRANSITIONS,
+    DelegationLevel,
+    DelegationProfile,
+    RiskLevel,
     Thread,
     ThreadId,
-    ThreadStatus,
     ThreadObjective,
-    DelegationProfile,
-    DelegationLevel,
-    RiskLevel,
+    ThreadStatus,
     can_transition,
-    VALID_TRANSITIONS,
 )
-from myproj.core.domain.principal import PrincipalId
 
 
 class TestThreadId:
@@ -316,6 +315,42 @@ class TestThread:
         initial_version = thread.version
         thread.increment_version()
 
+        assert thread.version == initial_version + 1
+
+    def test_status_change_increments_version(self):
+        """状态流转会递增版本号"""
+        thread = self.create_thread()
+        initial_version = thread.version
+
+        thread.transition_to(ThreadStatus.PLANNING)
+
+        assert thread.version == initial_version + 1
+
+    def test_update_objective_marks_thread_updated(self):
+        """更新目标会刷新时间和版本"""
+        thread = self.create_thread()
+        initial_version = thread.version
+        initial_updated_at = thread.updated_at
+
+        thread.update_objective(
+            ThreadObjective(
+                title="新的目标",
+                description="新的描述",
+            )
+        )
+
+        assert thread.objective.title == "新的目标"
+        assert thread.version == initial_version + 1
+        assert thread.updated_at >= initial_updated_at
+
+    def test_set_risk_level_increments_version(self):
+        """更新风险等级会递增版本号"""
+        thread = self.create_thread()
+        initial_version = thread.version
+
+        thread.set_risk_level(RiskLevel.HIGH)
+
+        assert thread.risk_level == RiskLevel.HIGH
         assert thread.version == initial_version + 1
 
     def test_updated_at_on_transition(self):

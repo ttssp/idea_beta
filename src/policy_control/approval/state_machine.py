@@ -4,7 +4,6 @@ Approval State Machine
 
 审批状态机
 """
-from typing import List, Set
 
 from ..common.constants import ApprovalStatus
 from ..common.exceptions import ApprovalStateTransitionError
@@ -68,6 +67,6 @@ class ApprovalStateMachine:
         return len(cls.ALLOWED_TRANSITIONS.get(status, set())) == 0
 
     @classmethod
-    def get_allowed_next_statuses(cls, status: ApprovalStatus) -> Set[ApprovalStatus]:
+    def get_allowed_next_statuses(cls, status: ApprovalStatus) -> set[ApprovalStatus]:
         """获取允许的下一状态"""
         return cls.ALLOWED_TRANSITIONS.get(status, set()).copy()

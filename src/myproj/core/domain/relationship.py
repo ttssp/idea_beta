@@ -2,14 +2,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.thread import DelegationProfile
-
 
 # ============================================
 # 值对象 (Value Objects)
@@ -72,12 +71,12 @@ class Relationship(BaseModel):
     sensitivity: SensitivityLevel = SensitivityLevel.MEDIUM
 
     # 委托配置 - E2依赖
-    default_delegation_profile: Optional[DelegationProfile] = None
-    custom_delegation_profile: Optional[DelegationProfile] = None
+    default_delegation_profile: DelegationProfile | None = None
+    custom_delegation_profile: DelegationProfile | None = None
 
     # 关系元数据
-    alias: Optional[str] = Field(None, max_length=200)
-    notes: Optional[str] = Field(None, max_length=2000)
+    alias: str | None = Field(None, max_length=200)
+    notes: str | None = Field(None, max_length=2000)
     tags: list[str] = Field(default_factory=list)
 
     # 状态
@@ -85,8 +84,8 @@ class Relationship(BaseModel):
     is_favorite: bool = False
 
     # 交互历史
-    first_interaction_at: Optional[datetime] = None
-    last_interaction_at: Optional[datetime] = None
+    first_interaction_at: datetime | None = None
+    last_interaction_at: datetime | None = None
     interaction_count: int = 0
 
     # 时间戳
@@ -151,39 +150,44 @@ class Relationship(BaseModel):
         elif relationship_class == RelationshipClass.CUSTOMER:
             self.sensitivity = SensitivityLevel.HIGH
 
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def update_sensitivity(self, level: SensitivityLevel) -> None:
         """更新敏感度"""
         self.sensitivity = level
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def set_custom_delegation_profile(self, profile: DelegationProfile) -> None:
         """设置自定义委托档位"""
         self.custom_delegation_profile = profile
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def clear_custom_delegation_profile(self) -> None:
         """清除自定义委托档位"""
         self.custom_delegation_profile = None
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def set_default_delegation_profile(self, profile: DelegationProfile) -> None:
         """设置默认委托档位"""
         self.default_delegation_profile = profile
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def add_tag(self, tag: str) -> None:
         """添加标签"""
         if tag not in self.tags:
             self.tags.append(tag)
-            self.updated_at = datetime.utcnow()
+            self._mark_updated()
 
     def remove_tag(self, tag: str) -> None:
         """移除标签"""
         if tag in self.tags:
             self.tags.remove(tag)
-            self.updated_at = datetime.utcnow()
+            self._mark_updated()
+
+    def replace_tags(self, tags: list[str]) -> None:
+        """替换标签集合，并保持去重顺序。"""
+        self.tags = list(dict.fromkeys(tags))
+        self._mark_updated()
 
     def record_interaction(self) -> None:
         """记录交互"""
@@ -192,33 +196,38 @@ class Relationship(BaseModel):
             self.first_interaction_at = now
         self.last_interaction_at = now
         self.interaction_count += 1
-        self.updated_at = now
+        self._mark_updated(now)
 
     def set_alias(self, alias: str) -> None:
         """设置别名"""
         self.alias = alias[:200]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def set_notes(self, notes: str) -> None:
         """设置备注"""
         self.notes = notes[:2000]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def toggle_favorite(self) -> None:
         """切换收藏状态"""
         self.is_favorite = not self.is_favorite
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def deactivate(self) -> None:
         """停用关系"""
         self.is_active = False
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def activate(self) -> None:
         """启用关系"""
         self.is_active = True
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def increment_version(self) -> None:
         """版本号递增"""
         self.version += 1
+
+    def _mark_updated(self, at: datetime | None = None) -> None:
+        """统一维护更新时间和版本号。"""
+        self.updated_at = at or datetime.utcnow()
+        self.increment_version()

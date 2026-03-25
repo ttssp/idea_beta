@@ -4,9 +4,10 @@ Approval Engine Service
 
 审批请求创建/审核/超时处理/批量操作
 """
-from typing import List, Optional, Dict, Any, Callable
-from uuid import UUID
+from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import Any
+from uuid import UUID
 
 from ..common.constants import ApprovalStatus, RequestType, TimeoutAction
 from ..common.exceptions import ApprovalStateTransitionError
@@ -18,9 +19,9 @@ class ApprovalService:
     """审批服务"""
 
     def __init__(self):
-        self._requests: Dict[UUID, ApprovalRequest] = {}
+        self._requests: dict[UUID, ApprovalRequest] = {}
         self._state_machine = ApprovalStateMachine()
-        self._on_resolved_callbacks: List[Callable] = []
+        self._on_resolved_callbacks: list[Callable] = []
 
     def on_resolved(self, callback: Callable):
         """注册审批解决回调"""
@@ -32,10 +33,10 @@ class ApprovalService:
         request_type: RequestType,
         reason_code: str,
         requester_principal_id: UUID,
-        reason_description: Optional[str] = None,
-        action_run_id: Optional[UUID] = None,
-        approver_principal_id: Optional[UUID] = None,
-        preview: Optional[Dict[str, Any]] = None,
+        reason_description: str | None = None,
+        action_run_id: UUID | None = None,
+        approver_principal_id: UUID | None = None,
+        preview: dict[str, Any] | None = None,
         timeout_hours: int = 24,
         timeout_action: TimeoutAction = TimeoutAction.ESCALATE,
     ) -> ApprovalRequest:
@@ -73,17 +74,17 @@ class ApprovalService:
         self._requests[request.id] = request
         return request
 
-    def get_request(self, request_id: UUID) -> Optional[ApprovalRequest]:
+    def get_request(self, request_id: UUID) -> ApprovalRequest | None:
         """获取审批请求"""
         return self._requests.get(request_id)
 
     def list_requests(
         self,
-        thread_id: Optional[UUID] = None,
-        status: Optional[ApprovalStatus] = None,
-        approver_principal_id: Optional[UUID] = None,
+        thread_id: UUID | None = None,
+        status: ApprovalStatus | None = None,
+        approver_principal_id: UUID | None = None,
         limit: int = 100,
-    ) -> List[ApprovalRequest]:
+    ) -> list[ApprovalRequest]:
         """
         列出审批请求
 
@@ -174,7 +175,7 @@ class ApprovalService:
 
         return request
 
-    def cancel(self, request_id: UUID, reason: Optional[str] = None) -> ApprovalRequest:
+    def cancel(self, request_id: UUID, reason: str | None = None) -> ApprovalRequest:
         """取消审批请求"""
         request = self._requests.get(request_id)
         if not request:
@@ -193,7 +194,7 @@ class ApprovalService:
 
         return request
 
-    def process_timeouts(self) -> List[ApprovalRequest]:
+    def process_timeouts(self) -> list[ApprovalRequest]:
         """
         处理超时审批
 
@@ -236,11 +237,11 @@ class ApprovalService:
 
     def bulk_resolve(
         self,
-        request_ids: List[UUID],
+        request_ids: list[UUID],
         action: str,
         resolved_by: UUID,
-        reason: Optional[str] = None,
-    ) -> List[ApprovalRequest]:
+        reason: str | None = None,
+    ) -> list[ApprovalRequest]:
         """
         批量审批操作
 

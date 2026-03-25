@@ -1,19 +1,18 @@
 """Thread 仓储"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 
 from myproj.core.domain.thread import (
+    DelegationLevel,
+    DelegationProfile,
+    RiskLevel,
     Thread,
     ThreadId,
-    ThreadStatus,
     ThreadObjective,
-    DelegationProfile,
-    DelegationLevel,
-    RiskLevel,
+    ThreadStatus,
 )
 from myproj.core.repositories.base import BaseRepository
 from myproj.infra.db.models import ThreadModel
@@ -102,22 +101,58 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
 
     # Thread 专用查询方法
 
+    def find_all(
+        self,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> list[Thread]:
+        """通用查询，支持状态、风险和标签过滤。"""
+        query = self._build_filtered_query(
+            statuses=statuses,
+            risk_levels=risk_levels,
+            tags=tags,
+        )
+
+        models = (
+            query.order_by(ThreadModel.updated_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return [self._to_entity(m) for m in models]
+
+    def count_filtered(
+        self,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
+    ) -> int:
+        """统计过滤后的线程数量。"""
+        return self._build_filtered_query(
+            statuses=statuses,
+            risk_levels=risk_levels,
+            tags=tags,
+        ).count()
+
     def find_by_owner(
         self,
         owner_id: UUID,
-        statuses: Optional[List[ThreadStatus]] = None,
-        risk_levels: Optional[List[RiskLevel]] = None,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """按所有者查询"""
-        query = self.session.query(ThreadModel).filter(ThreadModel.owner_id == owner_id)
-
-        if statuses:
-            query = query.filter(ThreadModel.status.in_([s.value for s in statuses]))
-
-        if risk_levels:
-            query = query.filter(ThreadModel.risk_level.in_([r.value for r in risk_levels]))
+        query = self._build_filtered_query(
+            owner_id=owner_id,
+            statuses=statuses,
+            risk_levels=risk_levels,
+            tags=tags,
+        )
 
         models = (
             query.order_by(ThreadModel.updated_at.desc())
@@ -130,22 +165,24 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
     def count_by_owner(
         self,
         owner_id: UUID,
-        statuses: Optional[List[ThreadStatus]] = None,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
     ) -> int:
         """按所有者统计"""
-        query = self.session.query(ThreadModel).filter(ThreadModel.owner_id == owner_id)
-
-        if statuses:
-            query = query.filter(ThreadModel.status.in_([s.value for s in statuses]))
-
-        return query.count()
+        return self._build_filtered_query(
+            owner_id=owner_id,
+            statuses=statuses,
+            risk_levels=risk_levels,
+            tags=tags,
+        ).count()
 
     def find_by_status(
         self,
         status: ThreadStatus,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """按状态查询"""
         models = (
             self.session.query(ThreadModel)
@@ -162,7 +199,7 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
         principal_id: UUID,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """按参与者查询"""
         # PostgreSQL 的 JSONB 包含查询
         models = (
@@ -177,10 +214,10 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
 
     def find_by_tags(
         self,
-        tags: List[str],
+        tags: list[str],
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """按标签查询"""
         query = self.session.query(ThreadModel)
 
@@ -200,7 +237,7 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """查询需要审批的Thread"""
         return self.find_by_status(ThreadStatus.AWAITING_APPROVAL, offset, limit)
 
@@ -208,7 +245,7 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """查询代理正在运行的Thread"""
         return self.find_by_status(ThreadStatus.ACTIVE, offset, limit)
 
@@ -216,7 +253,7 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """查询等待外部回复的Thread"""
         return self.find_by_status(ThreadStatus.AWAITING_EXTERNAL, offset, limit)
 
@@ -224,16 +261,16 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """查询被阻塞的Thread"""
         return self.find_by_status(ThreadStatus.BLOCKED, offset, limit)
 
     def find_completed(
         self,
-        since: Optional[datetime] = None,
+        since: datetime | None = None,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """查询已完成的Thread"""
         query = self.session.query(ThreadModel).filter(
             ThreadModel.status == ThreadStatus.COMPLETED.value
@@ -249,3 +286,26 @@ class ThreadRepository(BaseRepository[ThreadId, Thread, ThreadModel]):
             .all()
         )
         return [self._to_entity(m) for m in models]
+
+    def _build_filtered_query(
+        self,
+        owner_id: UUID | None = None,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
+    ):
+        query = self.session.query(ThreadModel)
+
+        if owner_id is not None:
+            query = query.filter(ThreadModel.owner_id == owner_id)
+
+        if statuses:
+            query = query.filter(ThreadModel.status.in_([s.value for s in statuses]))
+
+        if risk_levels:
+            query = query.filter(ThreadModel.risk_level.in_([r.value for r in risk_levels]))
+
+        if tags:
+            query = query.filter(or_(*[ThreadModel.tags.contains([tag]) for tag in tags]))
+
+        return query

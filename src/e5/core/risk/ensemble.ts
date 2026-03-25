@@ -7,7 +7,6 @@ import type {
   ClassifyRiskRequest,
   RiskClassification,
   RiskTag,
-  SingleRiskClassifierResult,
 } from '../../types/index.js';
 import { llmClient } from '../../llm/client.js';
 import { promptLibrary } from '../../prompts/library.js';
@@ -134,7 +133,7 @@ export class RiskEnsembleClassifier {
 
   private buildResultFromRules(
     matches: RiskRuleMatch[],
-    startTime: number
+    _startTime: number
   ): RiskClassification {
     const tags = matches.map(m => m.tag) as RiskTag[];
     const confidence: Record<RiskTag, number> = {
@@ -168,7 +167,7 @@ export class RiskEnsembleClassifier {
   private buildResultFromLLM(
     llmResult: LLMClassificationResult,
     ruleMatches: RiskRuleMatch[],
-    startTime: number
+    _startTime: number
   ): RiskClassification {
     const tags = llmResult.tags;
     const confidence = llmResult.confidence;

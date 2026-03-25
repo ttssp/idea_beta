@@ -1,18 +1,16 @@
 """Event Store 单元测试"""
 
-from datetime import datetime, timedelta
-from typing import Optional
-from uuid import UUID, uuid4
+from datetime import timedelta
 
 import pytest
 
-from myproj.core.domain.thread import ThreadId, ThreadStatus
 from myproj.core.domain.event import (
-    ThreadEvent,
     EventId,
     EventType,
+    ThreadEvent,
 )
-from myproj.core.services.event_store import EventStore, AppendOnlyStore
+from myproj.core.domain.thread import ThreadId, ThreadStatus
+from myproj.core.services.event_store import AppendOnlyStore, EventStore
 
 
 class TestAppendOnlyStore:
@@ -23,7 +21,7 @@ class TestAppendOnlyStore:
         self.store = AppendOnlyStore()
         self.thread_id = ThreadId.generate()
 
-    def create_event(self, thread_id: Optional[ThreadId] = None, **kwargs) -> ThreadEvent:
+    def create_event(self, thread_id: ThreadId | None = None, **kwargs) -> ThreadEvent:
         """创建测试事件"""
         tid = thread_id or self.thread_id
         defaults = {
@@ -87,6 +85,25 @@ class TestAppendOnlyStore:
         assert len(stored) == 3
         assert stored[0].sequence_number == 1
         assert stored[2].sequence_number == 3
+
+    def test_append_many_with_idempotency_key(self):
+        """批量追加也应注册幂等键并拒绝重复提交"""
+        events = [
+            self.create_event(title="Event 1"),
+            self.create_event(title="Event 2"),
+        ]
+
+        self.store.append_many(events, idempotency_key="batch-key")
+
+        assert self.store.exists_by_idempotency_key("batch-key")
+        assert self.store.exists_by_idempotency_key("batch-key:1")
+        assert self.store.exists_by_idempotency_key("batch-key:2")
+
+        with pytest.raises(ValueError):
+            self.store.append_many(
+                [self.create_event(title="Event 3")],
+                idempotency_key="batch-key",
+            )
 
     def test_get_by_thread(self):
         """按Thread查询"""
@@ -153,6 +170,18 @@ class TestAppendOnlyStore:
 
         assert events_forward[0].sequence_number == 1
         assert events_reverse[0].sequence_number == 5
+
+    def test_get_by_thread_limit_counts_visible_events(self):
+        """limit 应作用在可见事件上，而不是先截断再过滤"""
+        hidden = self.store.append(self.create_event(title="Hidden"))
+        hidden.hide()
+        self.store.append(self.create_event(title="Visible 1"))
+        self.store.append(self.create_event(title="Visible 2"))
+
+        events = self.store.get_by_thread(self.thread_id, limit=2)
+
+        assert len(events) == 2
+        assert [event.title for event in events] == ["Visible 1", "Visible 2"]
 
     def test_get_by_id(self):
         """按ID查询"""
@@ -376,9 +405,9 @@ class TestEventStore:
         event2 = self.create_event(EventType.MESSAGE_SENT)
         event3 = self.create_event(EventType.THREAD_COMPLETED)
 
-        stored1 = self.store.append(event1)
+        self.store.append(event1)
         stored2 = self.store.append(event2)
-        stored3 = self.store.append(event3)
+        self.store.append(event3)
 
         # 隐藏一个事件
         stored2.hide()

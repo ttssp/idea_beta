@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
-import { getSSEClient, SSEClient } from './client';
+import { getSSEClient, type SSEClient } from './client';
 import { useThreadStore, useApprovalStore } from '@/lib/store';
 import type { Thread, ApprovalRequest } from '@/lib/types';
 

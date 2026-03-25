@@ -10,7 +10,8 @@ import {
   DELEGATION_PROFILE_LABELS,
   getDelegationProfileColor,
 } from '@/lib/utils';
-import type { DelegationProfile, RelationshipClass } from '@/lib/types/thread';
+import type { DelegationProfile } from '@/lib/types/thread';
+import type { RelationshipClass } from '@/lib/types/delegation';
 
 const profileIcons: Record<RelationshipClass, typeof Users> = {
   internal_team: Users,

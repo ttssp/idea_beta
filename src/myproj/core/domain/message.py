@@ -2,14 +2,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.thread import ThreadId
-
 
 # ============================================
 # 值对象 (Value Objects)
@@ -77,8 +76,8 @@ class ChannelType(str, Enum):
 class DisclosurePayload(BaseModel):
     """身份披露载荷"""
     mode: str
-    display_text: Optional[str] = None
-    template_id: Optional[str] = None
+    display_text: str | None = None
+    template_id: str | None = None
 
 
 # ============================================
@@ -101,25 +100,25 @@ class Message(BaseModel):
 
     # 主体信息
     sender_principal_id: PrincipalId
-    author_principal_id: Optional[PrincipalId] = None
-    approver_principal_id: Optional[PrincipalId] = None
+    author_principal_id: PrincipalId | None = None
+    approver_principal_id: PrincipalId | None = None
 
     # 内容
-    subject: Optional[str] = Field(None, max_length=500)
+    subject: str | None = Field(None, max_length=500)
     content: str = Field(..., min_length=1)
-    content_html: Optional[str] = None
-    content_markdown: Optional[str] = None
+    content_html: str | None = None
+    content_markdown: str | None = None
 
     # 引用与回复
-    parent_message_id: Optional[MessageId] = None
-    reply_to_external_id: Optional[str] = Field(None, max_length=255)
-    external_message_id: Optional[str] = Field(None, max_length=255)
+    parent_message_id: MessageId | None = None
+    reply_to_external_id: str | None = Field(None, max_length=255)
+    external_message_id: str | None = Field(None, max_length=255)
 
     # 审批关联
-    approval_request_id: Optional[UUID] = None
+    approval_request_id: UUID | None = None
 
     # 身份披露
-    disclosure: Optional[DisclosurePayload] = None
+    disclosure: DisclosurePayload | None = None
 
     # 附件
     attachments: list[dict[str, Any]] = Field(default_factory=list)
@@ -128,13 +127,13 @@ class Message(BaseModel):
     is_draft: bool = False
     is_sent: bool = False
     is_read: bool = False
-    read_at: Optional[datetime] = None
+    read_at: datetime | None = None
 
     # 发送状态
-    sent_at: Optional[datetime] = None
-    delivered_at: Optional[datetime] = None
-    delivery_status: Optional[str] = Field(None, max_length=50)
-    delivery_error: Optional[str] = None
+    sent_at: datetime | None = None
+    delivered_at: datetime | None = None
+    delivery_status: str | None = Field(None, max_length=50)
+    delivery_error: str | None = None
 
     # 时间戳
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -152,7 +151,7 @@ class Message(BaseModel):
         thread_id: ThreadId,
         sender_principal_id: PrincipalId,
         content: str,
-        subject: Optional[str] = None,
+        subject: str | None = None,
         channel: ChannelType = ChannelType.INTERNAL,
     ) -> "Message":
         """创建人类创作的消息"""
@@ -173,7 +172,7 @@ class Message(BaseModel):
         thread_id: ThreadId,
         agent_principal_id: PrincipalId,
         content: str,
-        subject: Optional[str] = None,
+        subject: str | None = None,
         channel: ChannelType = ChannelType.INTERNAL,
     ) -> "Message":
         """创建代理起草的消息"""
@@ -194,7 +193,7 @@ class Message(BaseModel):
         thread_id: ThreadId,
         agent_principal_id: PrincipalId,
         content: str,
-        subject: Optional[str] = None,
+        subject: str | None = None,
         channel: ChannelType = ChannelType.INTERNAL,
     ) -> "Message":
         """创建策略范围内自动发送的代理消息"""
@@ -228,14 +227,14 @@ class Message(BaseModel):
         if self.is_sent:
             raise ValueError("Cannot update sent message")
         self.content = content
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def update_subject(self, subject: str) -> None:
         """更新主题"""
         if self.is_sent:
             raise ValueError("Cannot update sent message")
         self.subject = subject[:500]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def mark_as_approved(self, approver_id: PrincipalId) -> None:
         """标记为已批准"""
@@ -243,11 +242,11 @@ class Message(BaseModel):
             raise ValueError("Message already sent")
         self.approver_principal_id = approver_id
         self.authored_mode = AuthoredMode.AGENT_DRAFTED_HUMAN_APPROVED_SENT
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def mark_as_sent(
         self,
-        external_message_id: Optional[str] = None,
+        external_message_id: str | None = None,
     ) -> None:
         """标记为已发送"""
         if self.is_sent:
@@ -256,36 +255,41 @@ class Message(BaseModel):
         self.is_draft = False
         self.sent_at = datetime.utcnow()
         self.external_message_id = external_message_id
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def mark_as_read(self) -> None:
         """标记为已读"""
         self.is_read = True
         self.read_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def mark_as_delivered(self) -> None:
         """标记为已送达"""
         self.delivered_at = datetime.utcnow()
         self.delivery_status = "delivered"
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def mark_delivery_failed(self, error: str) -> None:
         """标记为发送失败"""
         self.delivery_status = "failed"
         self.delivery_error = error[:500]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def set_disclosure(self, disclosure: DisclosurePayload) -> None:
         """设置披露信息"""
         self.disclosure = disclosure
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def add_attachment(self, attachment: dict[str, Any]) -> None:
         """添加附件"""
         self.attachments.append(attachment)
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def increment_version(self) -> None:
         """版本号递增"""
         self.version += 1
+
+    def _mark_updated(self) -> None:
+        """统一维护更新时间和版本号。"""
+        self.updated_at = datetime.utcnow()
+        self.increment_version()

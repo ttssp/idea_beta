@@ -2,11 +2,10 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
-
 
 # ============================================
 # 值对象 (Value Objects)
@@ -72,26 +71,26 @@ class Principal(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=200)
 
     # 联系方式
-    email: Optional[str] = None
-    phone: Optional[str] = Field(None, max_length=50)
-    external_id: Optional[str] = Field(None, max_length=255)
+    email: str | None = None
+    phone: str | None = Field(None, max_length=50)
+    external_id: str | None = Field(None, max_length=255)
 
     # 信任与披露
     trust_tier: TrustTier = TrustTier.UNKNOWN
     disclosure_mode: DisclosureMode = DisclosureMode.SEMI
-    disclosure_template: Optional[str] = Field(None, max_length=500)
+    disclosure_template: str | None = Field(None, max_length=500)
 
     # 元数据
     is_active: bool = True
     is_verified: bool = False
-    avatar_url: Optional[str] = Field(None, max_length=500)
-    timezone: Optional[str] = Field(None, max_length=100)
-    locale: Optional[str] = Field(None, max_length=20)
+    avatar_url: str | None = Field(None, max_length=500)
+    timezone: str | None = Field(None, max_length=100)
+    locale: str | None = Field(None, max_length=20)
 
     # 时间戳
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    last_seen_at: Optional[datetime] = None
+    last_seen_at: datetime | None = None
 
     # 乐观锁
     version: int = 1
@@ -103,7 +102,7 @@ class Principal(BaseModel):
     def create_human(
         cls,
         display_name: str,
-        email: Optional[str] = None,
+        email: str | None = None,
         is_verified: bool = False,
     ) -> "Principal":
         """创建人类主体"""
@@ -134,8 +133,8 @@ class Principal(BaseModel):
     def create_external(
         cls,
         display_name: str,
-        email: Optional[str] = None,
-        external_id: Optional[str] = None,
+        email: str | None = None,
+        external_id: str | None = None,
     ) -> "Principal":
         """创建外部方主体"""
         return cls(
@@ -187,41 +186,76 @@ class Principal(BaseModel):
     def update_display_name(self, name: str) -> None:
         """更新显示名称"""
         self.display_name = name[:200]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def update_email(self, email: str, verified: bool = False) -> None:
         """更新邮箱"""
         self.email = email
         self.is_verified = verified
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
+
+    def update_phone(self, phone: str) -> None:
+        """更新手机号"""
+        self.phone = phone[:50]
+        self._mark_updated()
 
     def set_trust_tier(self, tier: TrustTier) -> None:
         """设置信任等级"""
         self.trust_tier = tier
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def set_disclosure_mode(self, mode: DisclosureMode) -> None:
         """设置披露模式"""
         self.disclosure_mode = mode
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
+
+    def set_disclosure_template(self, template: str) -> None:
+        """设置披露模板"""
+        self.disclosure_template = template[:500]
+        self._mark_updated()
+
+    def set_timezone(self, timezone: str) -> None:
+        """设置时区"""
+        self.timezone = timezone[:100]
+        self._mark_updated()
+
+    def set_locale(self, locale: str) -> None:
+        """设置区域设置"""
+        self.locale = locale[:20]
+        self._mark_updated()
 
     def block(self) -> None:
         """阻止该主体"""
         self.trust_tier = TrustTier.BLOCKED
         self.is_active = False
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def unblock(self) -> None:
         """解除阻止"""
         self.trust_tier = TrustTier.UNKNOWN
         self.is_active = True
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
+
+    def activate(self) -> None:
+        """启用主体"""
+        self.is_active = True
+        self._mark_updated()
+
+    def deactivate(self) -> None:
+        """停用主体"""
+        self.is_active = False
+        self._mark_updated()
 
     def mark_seen(self) -> None:
         """标记为已见"""
         self.last_seen_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def increment_version(self) -> None:
         """版本号递增"""
         self.version += 1
+
+    def _mark_updated(self) -> None:
+        """统一维护更新时间和版本号。"""
+        self.updated_at = datetime.utcnow()
+        self.increment_version()

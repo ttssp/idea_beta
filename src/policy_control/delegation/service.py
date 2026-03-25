@@ -4,20 +4,19 @@ Delegation Runtime Service
 
 委托档位管理、预算管理
 """
-from typing import Dict, List, Optional
-from uuid import UUID
 from datetime import datetime, timedelta
+from uuid import UUID
 
-from ..common.constants import DelegationLevel, SYSTEM_DELEGATION_PROFILES
+from ..common.constants import SYSTEM_DELEGATION_PROFILES, DelegationLevel
 from ..common.exceptions import (
-    InvalidDelegationProfileError,
     BudgetExceededError,
+    InvalidDelegationProfileError,
 )
 from .models import (
-    DelegationProfile,
     BudgetUsage,
-    ThreadDelegationBinding,
+    DelegationProfile,
     RelationshipDelegationBinding,
+    ThreadDelegationBinding,
 )
 
 
@@ -26,10 +25,10 @@ class DelegationService:
 
     def __init__(self):
         # 内存存储（实际项目中应使用数据库）
-        self._profiles: Dict[UUID, DelegationProfile] = {}
-        self._thread_bindings: Dict[UUID, ThreadDelegationBinding] = {}
-        self._relationship_bindings: Dict[UUID, RelationshipDelegationBinding] = {}
-        self._budget_usages: Dict[UUID, List[BudgetUsage]] = {}
+        self._profiles: dict[UUID, DelegationProfile] = {}
+        self._thread_bindings: dict[UUID, ThreadDelegationBinding] = {}
+        self._relationship_bindings: dict[UUID, RelationshipDelegationBinding] = {}
+        self._budget_usages: dict[UUID, list[BudgetUsage]] = {}
         self._initialize_system_profiles()
 
     def _initialize_system_profiles(self):
@@ -47,18 +46,18 @@ class DelegationService:
             )
             self._profiles[profile.id] = profile
 
-    def get_profile(self, profile_id: UUID) -> Optional[DelegationProfile]:
+    def get_profile(self, profile_id: UUID) -> DelegationProfile | None:
         """获取委托档位"""
         return self._profiles.get(profile_id)
 
-    def get_profile_by_name(self, name: str) -> Optional[DelegationProfile]:
+    def get_profile_by_name(self, name: str) -> DelegationProfile | None:
         """通过名称获取委托档位"""
         for profile in self._profiles.values():
             if profile.name == name:
                 return profile
         return None
 
-    def list_profiles(self, include_system: bool = True) -> List[DelegationProfile]:
+    def list_profiles(self, include_system: bool = True) -> list[DelegationProfile]:
         """列出所有可用档位"""
         profiles = list(self._profiles.values())
         if not include_system:
@@ -70,10 +69,10 @@ class DelegationService:
         name: str,
         display_name: str,
         profile_level: DelegationLevel,
-        allowed_actions: List[str],
-        description: Optional[str] = None,
-        budget_config: Optional[Dict] = None,
-        escalation_rules: Optional[Dict] = None,
+        allowed_actions: list[str],
+        description: str | None = None,
+        budget_config: dict | None = None,
+        escalation_rules: dict | None = None,
     ) -> DelegationProfile:
         """创建自定义委托档位"""
         if self.get_profile_by_name(name):
@@ -96,7 +95,7 @@ class DelegationService:
         self,
         profile_id: UUID,
         **kwargs,
-    ) -> Optional[DelegationProfile]:
+    ) -> DelegationProfile | None:
         """更新委托档位"""
         profile = self._profiles.get(profile_id)
         if not profile:
@@ -114,7 +113,7 @@ class DelegationService:
         self,
         thread_id: UUID,
         profile_id: UUID,
-        bound_by: Optional[UUID] = None,
+        bound_by: UUID | None = None,
     ) -> ThreadDelegationBinding:
         """绑定线程委托档位"""
         if profile_id not in self._profiles:
@@ -134,7 +133,7 @@ class DelegationService:
         self,
         relationship_id: UUID,
         profile_id: UUID,
-        bound_by: Optional[UUID] = None,
+        bound_by: UUID | None = None,
     ) -> RelationshipDelegationBinding:
         """绑定关系默认委托档位"""
         if profile_id not in self._profiles:
@@ -152,8 +151,8 @@ class DelegationService:
 
     def get_effective_profile(
         self,
-        thread_id: Optional[UUID] = None,
-        relationship_id: Optional[UUID] = None,
+        thread_id: UUID | None = None,
+        relationship_id: UUID | None = None,
     ) -> DelegationProfile:
         """
         获取有效委托档位

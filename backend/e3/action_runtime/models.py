@@ -3,13 +3,13 @@
 ActionRun Database Models
 """
 
-import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, ENUM
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import uuid4
+
+import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM, JSONB
 
 from ..core.database import Base
-
 
 # 枚举类型定义
 ActionRunStatusEnum = ENUM(

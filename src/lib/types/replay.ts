@@ -24,7 +24,7 @@ export interface ThreadEvent {
   threadId: string;
   eventType: ThreadEventType;
   actor: Principal;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   occurredAt: string;
   causalRef?: string;
   decisionTrace?: DecisionTrace;

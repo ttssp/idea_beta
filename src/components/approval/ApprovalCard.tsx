@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, ShieldAlert, User } from 'lucide-react';
+import { Clock, ShieldAlert } from 'lucide-react';
 import {
   APPROVAL_REQUEST_TYPE_LABELS,
   APPROVAL_STATUS_LABELS,

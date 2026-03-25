@@ -1,21 +1,20 @@
 """Thread 领域服务"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
+from myproj.core.domain.event import EventType, ThreadEvent
+from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.thread import (
-    Thread,
-    ThreadId,
-    ThreadStatus,
-    ThreadObjective,
     DelegationProfile,
     RiskLevel,
+    Thread,
+    ThreadId,
+    ThreadObjective,
+    ThreadStatus,
 )
-from myproj.core.domain.principal import PrincipalId
-from myproj.core.domain.event import ThreadEvent, EventType
-from myproj.core.services.state_machine import ThreadStateMachine, StateTransitionError
 from myproj.core.services.event_store import EventStore
+from myproj.core.services.state_machine import ThreadStateMachine
 
 
 class ThreadService:
@@ -23,8 +22,8 @@ class ThreadService:
 
     def __init__(
         self,
-        state_machine: Optional[ThreadStateMachine] = None,
-        event_store: Optional[EventStore] = None,
+        state_machine: ThreadStateMachine | None = None,
+        event_store: EventStore | None = None,
     ) -> None:
         self.state_machine = state_machine or ThreadStateMachine()
         self.event_store = event_store or EventStore()
@@ -34,12 +33,12 @@ class ThreadService:
         self,
         title: str,
         owner_id: UUID,
-        description: Optional[str] = None,
-        due_at: Optional[datetime] = None,
-        delegation_profile: Optional[DelegationProfile] = None,
-        participant_ids: Optional[List[UUID]] = None,
-        tags: Optional[List[str]] = None,
-        actor_id: Optional[PrincipalId] = None,
+        description: str | None = None,
+        due_at: datetime | None = None,
+        delegation_profile: DelegationProfile | None = None,
+        participant_ids: list[UUID] | None = None,
+        tags: list[str] | None = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """
         创建新Thread
@@ -75,24 +74,24 @@ class ThreadService:
 
         return thread, event
 
-    def get_thread(self, thread_id: ThreadId) -> Optional[Thread]:
+    def get_thread(self, thread_id: ThreadId) -> Thread | None:
         """获取Thread"""
         return self._threads.get(thread_id)
 
-    def get_thread_by_uuid(self, thread_uuid: UUID) -> Optional[Thread]:
+    def get_thread_by_uuid(self, thread_uuid: UUID) -> Thread | None:
         """通过UUID获取Thread"""
         thread_id = ThreadId(value=thread_uuid)
         return self.get_thread(thread_id)
 
     def list_threads(
         self,
-        owner_id: Optional[UUID] = None,
-        statuses: Optional[List[ThreadStatus]] = None,
-        risk_levels: Optional[List[RiskLevel]] = None,
-        tags: Optional[List[str]] = None,
+        owner_id: UUID | None = None,
+        statuses: list[ThreadStatus] | None = None,
+        risk_levels: list[RiskLevel] | None = None,
+        tags: list[str] | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[Thread]:
+    ) -> list[Thread]:
         """
         查询Thread列表
 
@@ -128,8 +127,8 @@ class ThreadService:
 
     def count_threads(
         self,
-        owner_id: Optional[UUID] = None,
-        statuses: Optional[List[ThreadStatus]] = None,
+        owner_id: UUID | None = None,
+        statuses: list[ThreadStatus] | None = None,
     ) -> int:
         """统计Thread数量"""
         threads = list(self._threads.values())
@@ -145,10 +144,10 @@ class ThreadService:
     def update_objective(
         self,
         thread_id: ThreadId,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        due_at: Optional[datetime] = None,
-        actor_id: Optional[PrincipalId] = None,
+        title: str | None = None,
+        description: str | None = None,
+        due_at: datetime | None = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """更新Thread目标"""
         thread = self._get_existing_thread(thread_id)
@@ -160,7 +159,7 @@ class ThreadService:
         if due_at is not None:
             thread.objective.due_at = due_at
 
-        thread.updated_at = datetime.utcnow()
+        thread.update_objective(thread.objective.model_copy(deep=True))
 
         event = ThreadEvent(
             thread_id=thread_id,
@@ -181,7 +180,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         summary: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """更新Thread摘要"""
         thread = self._get_existing_thread(thread_id)
@@ -203,12 +202,11 @@ class ThreadService:
         thread_id: ThreadId,
         risk_level: RiskLevel,
         reason: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """更新风险等级"""
         thread = self._get_existing_thread(thread_id)
-        thread.risk_level = risk_level
-        thread.updated_at = datetime.utcnow()
+        thread.set_risk_level(risk_level)
 
         event = ThreadEvent(
             thread_id=thread_id,
@@ -226,12 +224,11 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         profile: DelegationProfile,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """更新委托档位"""
         thread = self._get_existing_thread(thread_id)
-        thread.delegation_profile = profile
-        thread.updated_at = datetime.utcnow()
+        thread.set_delegation_profile(profile)
 
         event = ThreadEvent(
             thread_id=thread_id,
@@ -248,7 +245,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         principal_id: UUID,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """添加参与者"""
         thread = self._get_existing_thread(thread_id)
@@ -269,7 +266,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         principal_id: UUID,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """移除参与者"""
         thread = self._get_existing_thread(thread_id)
@@ -290,7 +287,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         principal_id: UUID,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """设置责任方"""
         thread = self._get_existing_thread(thread_id)
@@ -312,7 +309,7 @@ class ThreadService:
     def start_planning(
         self,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """开始规划"""
         thread = self._get_existing_thread(thread_id)
@@ -323,7 +320,7 @@ class ThreadService:
     def activate(
         self,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """激活"""
         thread = self._get_existing_thread(thread_id)
@@ -334,7 +331,7 @@ class ThreadService:
     def pause(
         self,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """暂停"""
         thread = self._get_existing_thread(thread_id)
@@ -345,7 +342,7 @@ class ThreadService:
     def resume(
         self,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """恢复"""
         thread = self._get_existing_thread(thread_id)
@@ -356,8 +353,8 @@ class ThreadService:
     def wait_for_external(
         self,
         thread_id: ThreadId,
-        reason: Optional[str] = None,
-        actor_id: Optional[PrincipalId] = None,
+        reason: str | None = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """等待外部回复"""
         thread = self._get_existing_thread(thread_id)
@@ -368,8 +365,8 @@ class ThreadService:
     def wait_for_approval(
         self,
         thread_id: ThreadId,
-        reason: Optional[str] = None,
-        actor_id: Optional[PrincipalId] = None,
+        reason: str | None = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """等待审批"""
         thread = self._get_existing_thread(thread_id)
@@ -381,7 +378,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         reason: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """阻塞"""
         thread = self._get_existing_thread(thread_id)
@@ -393,7 +390,7 @@ class ThreadService:
         self,
         thread_id: ThreadId,
         reason: str,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """升级到人工"""
         thread = self._get_existing_thread(thread_id)
@@ -404,7 +401,7 @@ class ThreadService:
     def complete(
         self,
         thread_id: ThreadId,
-        actor_id: Optional[PrincipalId] = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """完成"""
         thread = self._get_existing_thread(thread_id)
@@ -415,8 +412,8 @@ class ThreadService:
     def cancel(
         self,
         thread_id: ThreadId,
-        reason: Optional[str] = None,
-        actor_id: Optional[PrincipalId] = None,
+        reason: str | None = None,
+        actor_id: PrincipalId | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """取消"""
         thread = self._get_existing_thread(thread_id)

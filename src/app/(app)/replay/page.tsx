@@ -3,16 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockThreads, mockReplayEvents } from '@/mocks';
 import { StatusBadge } from '@/components/common/StatusBadge';
-import { History, Clock, User } from 'lucide-react';
+import { History, Clock } from 'lucide-react';
 import { formatRelativeTime, truncateText } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function ReplayPage() {
-  const completedThreads = mockThreads.filter(
-    (t) => t.status === 'completed' || t.status === 'cancelled'
-  );
-
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8">

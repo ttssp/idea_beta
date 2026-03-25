@@ -5,8 +5,8 @@ Action Type Registry
 Registry for action handler implementations.
 """
 
-from typing import Dict, Callable, Any, Optional
 from abc import ABC, abstractmethod
+from typing import Any
 from uuid import UUID
 
 
@@ -20,7 +20,7 @@ class ActionHandler(ABC):
         pass
 
     @abstractmethod
-    async def validate(self, input_payload: Dict[str, Any]) -> tuple[bool, Optional[str]]:
+    async def validate(self, input_payload: dict[str, Any]) -> tuple[bool, str | None]:
         """
         验证输入参数
 
@@ -33,9 +33,9 @@ class ActionHandler(ABC):
     async def execute(
         self,
         action_run_id: UUID,
-        input_payload: Dict[str, Any],
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        input_payload: dict[str, Any],
+        context: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         执行动作
 
@@ -58,13 +58,13 @@ class ActionRegistry:
     """
 
     def __init__(self):
-        self._handlers: Dict[str, ActionHandler] = {}
+        self._handlers: dict[str, ActionHandler] = {}
 
     def register(self, handler: ActionHandler):
         """注册动作处理器"""
         self._handlers[handler.action_type] = handler
 
-    def get(self, action_type: str) -> Optional[ActionHandler]:
+    def get(self, action_type: str) -> ActionHandler | None:
         """获取动作处理器"""
         return self._handlers.get(action_type)
 

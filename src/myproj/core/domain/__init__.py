@@ -1,43 +1,45 @@
 """核心领域模型"""
 
-from myproj.core.domain.thread import (
-    Thread,
-    ThreadId,
-    ThreadStatus,
-    ThreadObjective,
-    DelegationProfile,
-    DelegationLevel,
-    RiskLevel,
+from myproj.core.domain.event import (
+    EventId,
+    EventType,
+    ThreadEvent,
+)
+from myproj.core.domain.external_binding import (
+    BindingId,
+    ExternalBinding,
+    SyncState,
+)
+from myproj.core.domain.external_binding import (
+    ChannelType as ExternalChannelType,
+)
+from myproj.core.domain.message import (
+    AuthoredMode,
+    ChannelType,
+    Message,
+    MessageId,
 )
 from myproj.core.domain.principal import (
+    DisclosureMode,
     Principal,
     PrincipalId,
     PrincipalType,
     TrustTier,
-    DisclosureMode,
 )
 from myproj.core.domain.relationship import (
     Relationship,
-    RelationshipId,
     RelationshipClass,
+    RelationshipId,
     SensitivityLevel,
 )
-from myproj.core.domain.message import (
-    Message,
-    MessageId,
-    AuthoredMode,
-    ChannelType,
-)
-from myproj.core.domain.event import (
-    ThreadEvent,
-    EventId,
-    EventType,
-)
-from myproj.core.domain.external_binding import (
-    ExternalBinding,
-    BindingId,
-    ChannelType as ExternalChannelType,
-    SyncState,
+from myproj.core.domain.thread import (
+    DelegationLevel,
+    DelegationProfile,
+    RiskLevel,
+    Thread,
+    ThreadId,
+    ThreadObjective,
+    ThreadStatus,
 )
 
 __all__ = [

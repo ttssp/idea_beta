@@ -5,20 +5,15 @@ Google Calendar Channel Adapter
 Implements the ChannelAdapter interface for Google Calendar.
 """
 
-from typing import Optional, List, Dict, Any
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from ..base import (
     ChannelAdapter,
     ChannelMessage,
-    ChannelError,
     RetryableChannelError,
-    TerminalChannelError
-)
-from ..circuit_breaker import (
-    calendar_circuit,
-    calendar_adapter_exception_handler
+    TerminalChannelError,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,7 +26,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     支持创建、更新、查询日历事件
     """
 
-    def __init__(self, credentials: Optional[Any] = None):
+    def __init__(self, credentials: Any | None = None):
         """
         初始化Google Calendar适配器
 
@@ -55,9 +50,9 @@ class GoogleCalendarAdapter(ChannelAdapter):
 
     async def send_message(
         self,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         idempotency_key: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         发送消息（对于Calendar，这意味着创建/更新事件）
 
@@ -173,7 +168,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def fetch_message(
         self,
         external_message_key: str
-    ) -> Optional[ChannelMessage]:
+    ) -> ChannelMessage | None:
         """
         获取单个事件
 
@@ -209,7 +204,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def fetch_thread_messages(
         self,
         external_thread_key: str
-    ) -> List[ChannelMessage]:
+    ) -> list[ChannelMessage]:
         """
         获取线程内所有消息（对于Calendar，这是单个事件）
 
@@ -254,11 +249,11 @@ class GoogleCalendarAdapter(ChannelAdapter):
 
     async def get_free_busy(
         self,
-        calendar_ids: List[str],
+        calendar_ids: list[str],
         time_min: datetime,
         time_max: datetime,
         time_zone: str = 'UTC'
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         查询忙闲时间
 
@@ -287,10 +282,10 @@ class GoogleCalendarAdapter(ChannelAdapter):
     async def list_events(
         self,
         calendar_id: str = 'primary',
-        time_min: Optional[datetime] = None,
-        time_max: Optional[datetime] = None,
+        time_min: datetime | None = None,
+        time_max: datetime | None = None,
         max_results: int = 50
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         列出事件
 
@@ -307,7 +302,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
             raise TerminalChannelError("Calendar service not initialized")
 
         if time_min is None:
-            time_min = datetime.utcnow()
+            time_min = datetime.now(UTC)
         if time_max is None:
             time_max = time_min + timedelta(days=30)
 
@@ -324,7 +319,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
 
     def _event_to_channel_message(
         self,
-        event: Dict[str, Any],
+        event: dict[str, Any],
         calendar_id: str
     ) -> ChannelMessage:
         """将Calendar事件转换为ChannelMessage"""
@@ -366,7 +361,7 @@ class GoogleCalendarAdapter(ChannelAdapter):
         self,
         calendar_id: str,
         ical_uid: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """通过iCalUID查找事件（用于幂等）"""
         # 简化实现：列出最近事件并查找
         # 生产环境应该使用syncToken或watch机制
@@ -404,4 +399,3 @@ class GoogleCalendarAdapter(ChannelAdapter):
                 return True
 
         return False
-

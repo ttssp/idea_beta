@@ -7,8 +7,9 @@ Provides idempotency guarantee using Redis + PostgreSQL.
 
 import hashlib
 import json
-from typing import Any, Optional, Tuple
 from datetime import timedelta
+from typing import Any
+
 from redis.asyncio import Redis as AsyncRedis
 
 
@@ -47,7 +48,7 @@ class IdempotencyManager:
         self,
         key: str,
         value: str = "processing"
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         检查并设置幂等键
 

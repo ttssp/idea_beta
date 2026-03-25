@@ -5,14 +5,15 @@ Ingress Webhook API
 API endpoints for receiving external webhooks.
 """
 
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+from typing import Any
 
-from ..deps import get_db, get_idempotency_manager
-from ...outbox_inbox.inbox import InboxProcessor
+from fastapi import APIRouter, Depends, Header, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ...core.idempotency import IdempotencyManager
+from ...outbox_inbox.inbox import InboxProcessor
+from ..deps import get_db, get_idempotency_manager
 
 router = APIRouter(prefix="/ingress", tags=["ingress"])
 
@@ -20,11 +21,11 @@ router = APIRouter(prefix="/ingress", tags=["ingress"])
 @router.post("/email/gmail")
 async def gmail_webhook(
     request: Request,
-    x_gmail_signature: Optional[str] = Header(None),
-    x_gmail_timestamp: Optional[str] = Header(None),
+    x_gmail_signature: str | None = Header(None),
+    x_gmail_timestamp: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Gmail Webhook入口
     """
@@ -39,7 +40,6 @@ async def gmail_webhook(
 
     # 3. 提取外部消息/线程Key
     # 简化处理，实际需要从Gmail payload中解析
-    import json
     message_id = payload.get("message", {}).get("message_id", "test-msg-id")
     thread_id = payload.get("message", {}).get("thread_id", "test-thread-id")
     external_message_key = f"gmail:{message_id}"
@@ -73,11 +73,11 @@ async def outlook_mail_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Outlook Mail Webhook入口
     """
-    payload = await request.json()
+    await request.json()
     return {"status": "accepted", "note": "Not implemented yet"}
 
 
@@ -86,11 +86,11 @@ async def google_calendar_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Google Calendar Webhook入口
     """
-    payload = await request.json()
+    await request.json()
     return {"status": "accepted", "note": "Not implemented yet"}
 
 
@@ -99,10 +99,9 @@ async def outlook_calendar_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Outlook Calendar Webhook入口
     """
-    payload = await request.json()
+    await request.json()
     return {"status": "accepted", "note": "Not implemented yet"}
-

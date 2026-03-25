@@ -5,11 +5,12 @@ Circuit Breaker for Channel Adapters
 Implements circuit breaker pattern for external API resilience.
 """
 
-import pybreaker
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
 from functools import wraps
-from datetime import timedelta
+from typing import Any
+
+import pybreaker
 
 from .base import ChannelError, RetryableChannelError
 
@@ -21,19 +22,11 @@ logger = logging.getLogger(__name__)
 email_circuit = pybreaker.CircuitBreaker(
     fail_max=5,
     reset_timeout=30,
-    timeout=timedelta(seconds=30),
-    on_failure=lambda exc: logger.warning(f"Email circuit failure: {exc}"),
-    on_open=lambda: logger.error("Email circuit is OPEN - stopping outgoing emails"),
-    on_close=lambda: logger.info("Email circuit is CLOSED - resuming normal operation"),
-    on_half_open=lambda: logger.info("Email circuit is HALF-OPEN - testing connection")
 )
 
 calendar_circuit = pybreaker.CircuitBreaker(
     fail_max=5,
     reset_timeout=30,
-    on_failure=lambda exc: logger.warning(f"Calendar circuit failure: {exc}"),
-    on_open=lambda: logger.error("Calendar circuit is OPEN - stopping calendar operations"),
-    on_close=lambda: logger.info("Calendar circuit is CLOSED - resuming normal operation")
 )
 
 
@@ -191,8 +184,7 @@ def get_circuit_metrics() -> dict[str, Any]:
             'fail_counter': circuit.fail_counter,
             'fail_max': circuit.fail_max,
             'open_at': circuit.open_at.isoformat() if circuit.open_at else None,
-            'timeout_seconds': circuit.timeout.total_seconds() if circuit.timeout else None
+            'timeout_seconds': circuit.reset_timeout,
         }
 
     return metrics
-

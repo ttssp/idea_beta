@@ -5,11 +5,9 @@ E2 Policy & Control Module - Simplified Working Version
 This is a complete, working implementation of the E2 module.
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-
+from uuid import UUID, uuid4
 
 # ============================================================================
 # Enums & Constants
@@ -103,7 +101,7 @@ class DelegationProfile:
     id: UUID = field(default_factory=uuid4)
     name: str = ""
     display_name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
     profile_level: DelegationLevel = DelegationLevel.OBSERVE_ONLY
     allowed_actions: list = field(default_factory=list)
     is_system_defined: bool = True
@@ -116,10 +114,10 @@ class ApprovalRequest:
     thread_id: UUID = field(default_factory=uuid4)
     request_type: str = "message_send"
     reason_code: str = ""
-    reason_description: Optional[str] = None
+    reason_description: str | None = None
     status: ApprovalStatus = ApprovalStatus.PENDING
-    preview: Optional[Dict] = None
-    resolution: Optional[Dict] = None
+    preview: dict | None = None
+    resolution: dict | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -127,7 +125,7 @@ class ApprovalRequest:
 class KillSwitch:
     id: UUID = field(default_factory=uuid4)
     level: KillSwitchLevel = KillSwitchLevel.THREAD
-    level_id: Optional[UUID] = None
+    level_id: UUID | None = None
     reason: str = ""
     is_active: bool = True
     activated_at: datetime = field(default_factory=datetime.utcnow)
@@ -151,8 +149,8 @@ class DelegationService:
     """委托档位服务"""
 
     def __init__(self):
-        self._profiles: Dict[UUID, DelegationProfile] = {}
-        self._thread_bindings: Dict[UUID, UUID] = {}
+        self._profiles: dict[UUID, DelegationProfile] = {}
+        self._thread_bindings: dict[UUID, UUID] = {}
         self._initialize_system_profiles()
 
     def _initialize_system_profiles(self):
@@ -196,7 +194,7 @@ class ApprovalService:
     """审批服务"""
 
     def __init__(self):
-        self._requests: Dict[UUID, ApprovalRequest] = {}
+        self._requests: dict[UUID, ApprovalRequest] = {}
 
     def create_request(self, thread_id, reason_code, preview=None):
         request = ApprovalRequest(
@@ -313,7 +311,7 @@ class KillSwitchService:
     """熔断服务"""
 
     def __init__(self):
-        self._switches: Dict[UUID, KillSwitch] = {}
+        self._switches: dict[UUID, KillSwitch] = {}
 
     def activate(self, level, reason, activated_by, level_id=None):
         switch = KillSwitch(
@@ -349,7 +347,7 @@ class DecisionRecorder:
     """决策记录器"""
 
     def __init__(self):
-        self._traces: Dict[UUID, DecisionTrace] = {}
+        self._traces: dict[UUID, DecisionTrace] = {}
 
     def start_trace(self, thread_id):
         trace = DecisionTrace(thread_id=thread_id)

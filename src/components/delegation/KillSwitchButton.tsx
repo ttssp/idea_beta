@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ShieldAlert, ShieldX, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, ShieldX } from 'lucide-react';
 import { useState } from 'react';
 
 type KillSwitchLevel = 'global' | 'profile' | 'thread';

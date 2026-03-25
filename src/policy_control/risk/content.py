@@ -5,7 +5,7 @@ Content Risk Evaluator
 内容风险评估器（规则层：关键词/模式匹配）
 """
 import re
-from typing import List, Optional
+
 from ..common.constants import RiskLevel
 from .models import RiskEvaluationResult
 
@@ -79,7 +79,7 @@ class ContentRiskEvaluator:
 
     def evaluate(
         self,
-        content: Optional[str] = None,
+        content: str | None = None,
     ) -> RiskEvaluationResult:
         """
         评估内容风险

@@ -4,7 +4,6 @@ Policy Evaluator
 
 策略评估器 - 整合Delegation Profile和Policy Engine
 """
-from typing import Optional
 from uuid import UUID
 
 from ..common.constants import Decision, DelegationLevel
@@ -31,8 +30,8 @@ class PolicyEvaluator:
     def evaluate(
         self,
         context: PolicyContext,
-        thread_id: Optional[UUID] = None,
-        relationship_id: Optional[UUID] = None,
+        thread_id: UUID | None = None,
+        relationship_id: UUID | None = None,
     ) -> PolicyDecision:
         """
         完整的策略评估

@@ -4,14 +4,14 @@ Decision Recorder
 
 决策记录器
 """
-from typing import Optional, Dict, List, Any
-from uuid import UUID
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
 from time import time
+from typing import Any
+from uuid import UUID
 
 from ..common.constants import Decision
-from .models import DecisionTrace, DecisionStep
+from .models import DecisionTrace
 
 
 class DecisionRecorder:
@@ -22,13 +22,13 @@ class DecisionRecorder:
     """
 
     def __init__(self):
-        self._traces: Dict[UUID, DecisionTrace] = {}
-        self._thread_traces: Dict[UUID, List[UUID]] = {}
+        self._traces: dict[UUID, DecisionTrace] = {}
+        self._thread_traces: dict[UUID, list[UUID]] = {}
 
     def start_trace(
         self,
         thread_id: UUID,
-        action_run_id: Optional[UUID] = None,
+        action_run_id: UUID | None = None,
     ) -> DecisionTrace:
         """
         开始记录决策追踪
@@ -60,7 +60,7 @@ class DecisionRecorder:
         step_number: int,
         step_name: str,
         description: str,
-        input_data: Optional[Dict] = None,
+        input_data: dict | None = None,
     ):
         """
         记录单个决策步骤（上下文管理器）
@@ -95,9 +95,9 @@ class DecisionRecorder:
         step_number: int,
         step_name: str,
         description: str,
-        input_data: Optional[Dict] = None,
-        output_data: Optional[Dict] = None,
-        duration_ms: Optional[int] = None,
+        input_data: dict | None = None,
+        output_data: dict | None = None,
+        duration_ms: int | None = None,
     ):
         """
         同步记录单个决策步骤
@@ -116,8 +116,8 @@ class DecisionRecorder:
         trace: DecisionTrace,
         decision: Decision,
         decision_reason: str,
-        policy_hits: Optional[List[Dict]] = None,
-        risk_assessment_id: Optional[UUID] = None,
+        policy_hits: list[dict] | None = None,
+        risk_assessment_id: UUID | None = None,
         kill_switch_affected: bool = False,
     ) -> DecisionTrace:
         """
@@ -142,11 +142,11 @@ class DecisionRecorder:
 
         return trace
 
-    def get_trace(self, trace_id: UUID) -> Optional[DecisionTrace]:
+    def get_trace(self, trace_id: UUID) -> DecisionTrace | None:
         """获取决策追踪"""
         return self._traces.get(trace_id)
 
-    def get_traces_for_thread(self, thread_id: UUID, limit: int = 100) -> List[DecisionTrace]:
+    def get_traces_for_thread(self, thread_id: UUID, limit: int = 100) -> list[DecisionTrace]:
         """获取线程的所有决策追踪"""
         trace_ids = self._thread_traces.get(thread_id, [])
         traces = [self._traces.get(tid) for tid in trace_ids if tid in self._traces]
@@ -156,12 +156,12 @@ class DecisionRecorder:
     def record_8_step_decision(
         self,
         thread_id: UUID,
-        action_run_id: Optional[UUID],
+        action_run_id: UUID | None,
         decision: Decision,
         decision_reason: str,
-        step_data: List[Dict[str, Any]],
-        policy_hits: Optional[List[Dict]] = None,
-        risk_assessment_id: Optional[UUID] = None,
+        step_data: list[dict[str, Any]],
+        policy_hits: list[dict] | None = None,
+        risk_assessment_id: UUID | None = None,
         kill_switch_affected: bool = False,
     ) -> DecisionTrace:
         """

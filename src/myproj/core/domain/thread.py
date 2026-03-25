@@ -2,11 +2,10 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ============================================
 # 值对象 (Value Objects)
@@ -71,8 +70,8 @@ class RiskLevel(str, Enum):
 class ThreadObjective(BaseModel):
     """Thread 目标值对象"""
     title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=2000)
-    due_at: Optional[datetime] = None
+    description: str | None = Field(None, max_length=2000)
+    due_at: datetime | None = None
 
     def __str__(self) -> str:
         return self.title
@@ -207,20 +206,20 @@ class Thread(BaseModel):
 
     # 责任人与参与者
     owner_id: UUID
-    responsible_principal_id: Optional[UUID] = None
+    responsible_principal_id: UUID | None = None
     participant_ids: list[UUID] = Field(default_factory=list)
 
     # 摘要与元数据
-    summary: Optional[str] = Field(None, max_length=500)
-    current_step: Optional[str] = Field(None, max_length=500)
+    summary: str | None = Field(None, max_length=500)
+    current_step: str | None = Field(None, max_length=500)
     tags: list[str] = Field(default_factory=list)
 
     # 时间戳
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
-    last_escalated_at: Optional[datetime] = None
-    last_escalation_reason: Optional[str] = None
+    completed_at: datetime | None = None
+    last_escalated_at: datetime | None = None
+    last_escalation_reason: str | None = None
 
     # 乐观锁
     version: int = 1
@@ -276,7 +275,7 @@ class Thread(BaseModel):
             raise ValueError(f"Invalid transition: {self.status} -> {new_status}")
 
         self.status = new_status
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
         if new_status == ThreadStatus.COMPLETED:
             self.completed_at = datetime.utcnow()
@@ -316,25 +315,45 @@ class Thread(BaseModel):
     def update_summary(self, summary: str) -> None:
         """更新摘要"""
         self.summary = summary[:500]
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
+
+    def update_objective(self, objective: ThreadObjective) -> None:
+        """更新目标信息"""
+        self.objective = objective
+        self._mark_updated()
+
+    def set_risk_level(self, risk_level: RiskLevel) -> None:
+        """更新风险等级"""
+        self.risk_level = risk_level
+        self._mark_updated()
+
+    def set_delegation_profile(self, profile: DelegationProfile) -> None:
+        """更新委托档位"""
+        self.delegation_profile = profile
+        self._mark_updated()
 
     def set_responsible(self, principal_id: UUID) -> None:
         """设置责任方"""
         self.responsible_principal_id = principal_id
-        self.updated_at = datetime.utcnow()
+        self._mark_updated()
 
     def add_participant(self, principal_id: UUID) -> None:
         """添加参与者"""
         if principal_id not in self.participant_ids:
             self.participant_ids.append(principal_id)
-            self.updated_at = datetime.utcnow()
+            self._mark_updated()
 
     def remove_participant(self, principal_id: UUID) -> None:
         """移除参与者"""
         if principal_id in self.participant_ids:
             self.participant_ids.remove(principal_id)
-            self.updated_at = datetime.utcnow()
+            self._mark_updated()
 
     def increment_version(self) -> None:
         """版本号递增（乐观锁）"""
         self.version += 1
+
+    def _mark_updated(self) -> None:
+        """统一维护更新时间和乐观锁版本。"""
+        self.updated_at = datetime.utcnow()
+        self.increment_version()

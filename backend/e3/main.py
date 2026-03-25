@@ -3,14 +3,15 @@
 E3: Integration & Action API - Main Application
 """
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .api.v1 import actions, delivery, ingress, messages
 from .config import settings
-from .core.database import init_db, close_db
+from .core.database import close_db, init_db
 from .core.redis import close_redis
-from .api.v1 import actions, messages, ingress, delivery
 
 
 @asynccontextmanager

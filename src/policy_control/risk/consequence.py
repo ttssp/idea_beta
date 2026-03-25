@@ -4,7 +4,7 @@ Consequence Risk Evaluator
 
 结果风险评估器
 """
-from typing import Optional, Dict
+
 from ..common.constants import RiskLevel
 from .models import RiskEvaluationResult
 
@@ -18,7 +18,7 @@ class ConsequenceRiskEvaluator:
 
     def evaluate(
         self,
-        historical_data: Optional[Dict] = None,
+        historical_data: dict | None = None,
         relationship_risk: int = 1,
         action_risk: int = 1,
     ) -> RiskEvaluationResult:

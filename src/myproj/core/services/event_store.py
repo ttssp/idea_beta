@@ -1,11 +1,8 @@
 """Event Store 服务 - append-only event log"""
 
 from collections import defaultdict
-from datetime import datetime
-from typing import Dict, List, Optional, Set
-from uuid import UUID
 
-from myproj.core.domain.event import ThreadEvent, EventId, EventType
+from myproj.core.domain.event import EventId, EventType, ThreadEvent
 from myproj.core.domain.thread import ThreadId
 
 
@@ -20,15 +17,15 @@ class AppendOnlyStore:
     """
 
     def __init__(self) -> None:
-        self._events: Dict[ThreadId, List[ThreadEvent]] = defaultdict(list)
-        self._sequence_counters: Dict[ThreadId, int] = defaultdict(int)
-        self._idempotency_keys: Set[str] = set()
-        self._events_by_id: Dict[EventId, ThreadEvent] = {}
+        self._events: dict[ThreadId, list[ThreadEvent]] = defaultdict(list)
+        self._sequence_counters: dict[ThreadId, int] = defaultdict(int)
+        self._idempotency_keys: set[str] = set()
+        self._events_by_id: dict[EventId, ThreadEvent] = {}
 
     def append(
         self,
         event: ThreadEvent,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ) -> ThreadEvent:
         """
         追加事件
@@ -70,28 +67,32 @@ class AppendOnlyStore:
 
     def append_many(
         self,
-        events: List[ThreadEvent],
-        idempotency_key: Optional[str] = None,
-    ) -> List[ThreadEvent]:
+        events: list[ThreadEvent],
+        idempotency_key: str | None = None,
+    ) -> list[ThreadEvent]:
         """批量追加事件"""
         if idempotency_key and idempotency_key in self._idempotency_keys:
             raise ValueError(f"Events with idempotency key {idempotency_key} already exist")
 
+        if idempotency_key:
+            self._idempotency_keys.add(idempotency_key)
+
         result = []
-        for event in events:
-            result.append(self.append(event))
+        for index, event in enumerate(events, start=1):
+            batch_key = f"{idempotency_key}:{index}" if idempotency_key else None
+            result.append(self.append(event, idempotency_key=batch_key))
 
         return result
 
     def get_by_thread(
         self,
         thread_id: ThreadId,
-        from_sequence: Optional[int] = None,
-        to_sequence: Optional[int] = None,
-        event_types: Optional[List[EventType]] = None,
-        limit: Optional[int] = None,
+        from_sequence: int | None = None,
+        to_sequence: int | None = None,
+        event_types: list[EventType] | None = None,
+        limit: int | None = None,
         reverse: bool = False,
-    ) -> List[ThreadEvent]:
+    ) -> list[ThreadEvent]:
         """
         按Thread查询事件
 
@@ -122,18 +123,20 @@ class AppendOnlyStore:
         if reverse:
             events = list(reversed(events))
 
+        # 只返回可见事件
+        events = [e for e in events if e.is_visible]
+
         # 数量限制
         if limit is not None:
             events = events[:limit]
 
-        # 只返回可见事件
-        return [e for e in events if e.is_visible]
+        return events
 
-    def get_by_id(self, event_id: EventId) -> Optional[ThreadEvent]:
+    def get_by_id(self, event_id: EventId) -> ThreadEvent | None:
         """按ID查询事件"""
         return self._events_by_id.get(event_id)
 
-    def get_latest_by_thread(self, thread_id: ThreadId) -> Optional[ThreadEvent]:
+    def get_latest_by_thread(self, thread_id: ThreadId) -> ThreadEvent | None:
         """获取Thread的最新事件"""
         events = self._events.get(thread_id, [])
         return events[-1] if events else None
@@ -150,7 +153,7 @@ class AppendOnlyStore:
         """统计Thread的事件数量"""
         return len(self._events.get(thread_id, []))
 
-    def get_thread_ids(self) -> List[ThreadId]:
+    def get_thread_ids(self) -> list[ThreadId]:
         """获取所有有事件的Thread ID"""
         return list(self._events.keys())
 
@@ -162,7 +165,7 @@ class EventStore(AppendOnlyStore):
     在AppendOnlyStore基础上提供更丰富的查询和聚合能力
     """
 
-    def get_status_history(self, thread_id: ThreadId) -> List[dict]:
+    def get_status_history(self, thread_id: ThreadId) -> list[dict]:
         """获取状态变更历史"""
         events = self.get_by_thread(thread_id, event_types=[EventType.THREAD_STATUS_CHANGED])
         return [
@@ -176,7 +179,7 @@ class EventStore(AppendOnlyStore):
             for e in events
         ]
 
-    def get_message_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_message_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取消息相关事件"""
         return self.get_by_thread(
             thread_id,
@@ -189,7 +192,7 @@ class EventStore(AppendOnlyStore):
             ],
         )
 
-    def get_approval_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_approval_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取审批相关事件"""
         return self.get_by_thread(
             thread_id,
@@ -201,7 +204,7 @@ class EventStore(AppendOnlyStore):
             ],
         )
 
-    def get_risk_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_risk_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取风险相关事件"""
         return self.get_by_thread(
             thread_id,
@@ -211,14 +214,14 @@ class EventStore(AppendOnlyStore):
             ],
         )
 
-    def get_policy_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_policy_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取策略命中事件"""
         return self.get_by_thread(
             thread_id,
             event_types=[EventType.POLICY_HIT],
         )
 
-    def get_action_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_action_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取动作执行事件"""
         return self.get_by_thread(
             thread_id,
@@ -230,7 +233,7 @@ class EventStore(AppendOnlyStore):
             ],
         )
 
-    def get_ai_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_ai_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取AI相关事件"""
         return self.get_by_thread(
             thread_id,
@@ -241,7 +244,7 @@ class EventStore(AppendOnlyStore):
             ],
         )
 
-    def get_error_events(self, thread_id: ThreadId) -> List[ThreadEvent]:
+    def get_error_events(self, thread_id: ThreadId) -> list[ThreadEvent]:
         """获取错误事件"""
         return self.get_by_thread(
             thread_id,
@@ -251,8 +254,8 @@ class EventStore(AppendOnlyStore):
     def replay_events(
         self,
         thread_id: ThreadId,
-        to_sequence: Optional[int] = None,
-    ) -> List[ThreadEvent]:
+        to_sequence: int | None = None,
+    ) -> list[ThreadEvent]:
         """
         回放事件（用于重建状态）
 
@@ -266,8 +269,8 @@ class EventStore(AppendOnlyStore):
     def get_timeline(
         self,
         thread_id: ThreadId,
-        limit: Optional[int] = 100,
-    ) -> List[dict]:
+        limit: int | None = 100,
+    ) -> list[dict]:
         """获取时间线视图"""
         events = self.get_by_thread(thread_id, limit=limit, reverse=True)
         return [

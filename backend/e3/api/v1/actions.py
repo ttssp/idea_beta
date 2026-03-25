@@ -5,15 +5,16 @@ Actions API
 API endpoints for ActionRun management.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..deps import get_db, get_idempotency_manager, get_idempotency_key
 from ...action_runtime.engine import ActionRunEngine
 from ...action_runtime.models import ActionRun
 from ...core.idempotency import IdempotencyManager
+from ..deps import get_db, get_idempotency_manager
 
 router = APIRouter(prefix="/threads/{thread_id}/actions", tags=["actions"])
 
@@ -21,10 +22,10 @@ router = APIRouter(prefix="/threads/{thread_id}/actions", tags=["actions"])
 @router.post(":prepare")
 async def prepare_action(
     thread_id: UUID,
-    request: Dict[str, Any],
+    request: dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     准备动作（生成ActionRun）
     """
@@ -67,10 +68,10 @@ async def prepare_action(
 @router.post(":execute")
 async def execute_action(
     thread_id: UUID,
-    request: Dict[str, Any],
+    request: dict[str, Any],
     db: AsyncSession = Depends(get_db),
     idempotency: IdempotencyManager = Depends(get_idempotency_manager),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     执行动作
     """
@@ -150,7 +151,7 @@ async def cancel_action(
     thread_id: UUID,
     action_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     取消动作
     """
@@ -174,10 +175,10 @@ async def cancel_action(
 @router.get("")
 async def list_actions(
     thread_id: UUID,
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     查询动作列表
     """
@@ -190,7 +191,7 @@ async def list_actions(
     }
 
 
-def _action_run_to_dict(action_run: ActionRun) -> Dict[str, Any]:
+def _action_run_to_dict(action_run: ActionRun) -> dict[str, Any]:
     """将ActionRun转换为字典"""
     return {
         "id": str(action_run.id),

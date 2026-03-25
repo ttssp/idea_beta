@@ -5,8 +5,11 @@ ActionRun State Machine
 Defines the state machine for ActionRun objects.
 """
 
+from collections.abc import Callable
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Callable, Optional, List, Dict, Any
+from typing import Any
+
 from transitions import Machine
 
 
@@ -39,24 +42,32 @@ class ActionRunStateMachine:
 
     # 状态流转定义
     transitions = [
-        {"trigger": "plan", "source": ActionRunStatus.CREATED, "dest": ActionRunStatus.PLANNED},
-        {"trigger": "submit_for_approval", "source": ActionRunStatus.PLANNED, "dest": ActionRunStatus.READY_FOR_APPROVAL},
-        {"trigger": "approve", "source": ActionRunStatus.READY_FOR_APPROVAL, "dest": ActionRunStatus.APPROVED},
-        {"trigger": "reject", "source": ActionRunStatus.READY_FOR_APPROVAL, "dest": ActionRunStatus.CANCELLED},
-        {"trigger": "start_execution", "source": ActionRunStatus.APPROVED, "dest": ActionRunStatus.EXECUTING},
-        {"trigger": "send_success", "source": ActionRunStatus.EXECUTING, "dest": ActionRunStatus.SENT},
-        {"trigger": "send_fail_retryable", "source": ActionRunStatus.EXECUTING, "dest": ActionRunStatus.FAILED_RETRYABLE},
-        {"trigger": "send_fail_terminal", "source": ActionRunStatus.EXECUTING, "dest": ActionRunStatus.FAILED_TERMINAL},
-        {"trigger": "acknowledge", "source": ActionRunStatus.SENT, "dest": ActionRunStatus.ACKNOWLEDGED},
-        {"trigger": "retry", "source": ActionRunStatus.FAILED_RETRYABLE, "dest": ActionRunStatus.EXECUTING},
-        {"trigger": "max_retries_exceeded", "source": ActionRunStatus.FAILED_RETRYABLE, "dest": ActionRunStatus.FAILED_TERMINAL},
-        {"trigger": "cancel", "source": [ActionRunStatus.PLANNED, ActionRunStatus.READY_FOR_APPROVAL, ActionRunStatus.APPROVED], "dest": ActionRunStatus.CANCELLED},
+        {"trigger": "plan", "source": ActionRunStatus.CREATED.value, "dest": ActionRunStatus.PLANNED.value},
+        {"trigger": "submit_for_approval", "source": ActionRunStatus.PLANNED.value, "dest": ActionRunStatus.READY_FOR_APPROVAL.value},
+        {"trigger": "approve", "source": ActionRunStatus.READY_FOR_APPROVAL.value, "dest": ActionRunStatus.APPROVED.value},
+        {"trigger": "reject", "source": ActionRunStatus.READY_FOR_APPROVAL.value, "dest": ActionRunStatus.CANCELLED.value},
+        {"trigger": "start_execution", "source": ActionRunStatus.APPROVED.value, "dest": ActionRunStatus.EXECUTING.value},
+        {"trigger": "send_success", "source": ActionRunStatus.EXECUTING.value, "dest": ActionRunStatus.SENT.value},
+        {"trigger": "send_fail_retryable", "source": ActionRunStatus.EXECUTING.value, "dest": ActionRunStatus.FAILED_RETRYABLE.value},
+        {"trigger": "send_fail_terminal", "source": ActionRunStatus.EXECUTING.value, "dest": ActionRunStatus.FAILED_TERMINAL.value},
+        {"trigger": "acknowledge", "source": ActionRunStatus.SENT.value, "dest": ActionRunStatus.ACKNOWLEDGED.value},
+        {"trigger": "retry", "source": ActionRunStatus.FAILED_RETRYABLE.value, "dest": ActionRunStatus.EXECUTING.value},
+        {"trigger": "max_retries_exceeded", "source": ActionRunStatus.FAILED_RETRYABLE.value, "dest": ActionRunStatus.FAILED_TERMINAL.value},
+        {
+            "trigger": "cancel",
+            "source": [
+                ActionRunStatus.PLANNED.value,
+                ActionRunStatus.READY_FOR_APPROVAL.value,
+                ActionRunStatus.APPROVED.value,
+            ],
+            "dest": ActionRunStatus.CANCELLED.value,
+        },
     ]
 
     def __init__(
         self,
-        initial_state: str = ActionRunStatus.CREATED,
-        state_change_callback: Optional[Callable[[str, str], None]] = None
+        initial_state: ActionRunStatus | str = ActionRunStatus.CREATED,
+        state_change_callback: Callable[[str | None, str], None] | None = None,
     ):
         """
         初始化状态机
@@ -65,8 +76,11 @@ class ActionRunStateMachine:
             initial_state: 初始状态
             state_change_callback: 状态变更回调函数 (from_state, to_state)
         """
-        self._state = initial_state
-        self.state_history: List[Dict[str, Any]] = [{"state": initial_state, "timestamp": None}]
+        initial_value = initial_state.value if isinstance(initial_state, ActionRunStatus) else initial_state
+        self._state = initial_value
+        self.state_history: list[dict[str, Any]] = [
+            {"state": initial_value, "timestamp": None}
+        ]
         self.state_change_callback = state_change_callback
 
         # 初始化transitions库的Machine
@@ -74,17 +88,16 @@ class ActionRunStateMachine:
             model=self,
             states=self.states,
             transitions=self.transitions,
-            initial=initial_state,
+            initial=initial_value,
             after_state_change="_on_state_change",
             auto_transitions=False
         )
 
     def _on_state_change(self):
         """状态变更时的内部回调"""
-        from datetime import datetime
         self.state_history.append({
             "state": self.state,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(UTC).isoformat()
         })
         if self.state_change_callback:
             from_state = self.state_history[-2]["state"] if len(self.state_history) >= 2 else None
@@ -96,14 +109,15 @@ class ActionRunStateMachine:
         return self._state
 
     @state.setter
-    def state(self, value: str):
+    def state(self, value: ActionRunStatus | str):
         """设置状态（供transitions库使用）"""
-        self._state = value
+        self._state = value.value if isinstance(value, ActionRunStatus) else value
 
-    def can_transition_to(self, target_state: str) -> bool:
+    def can_transition_to(self, target_state: ActionRunStatus | str) -> bool:
         """检查是否可以转换到目标状态"""
         try:
-            return self.machine.get_transitions(dest=target_state, source=self.state) is not None
+            target_value = target_state.value if isinstance(target_state, ActionRunStatus) else target_state
+            return bool(self.machine.get_transitions(dest=target_value, source=self._state))
         except Exception:
             return False
 
@@ -130,7 +144,6 @@ class ActionRunStateMachine:
         """是否可以重试"""
         return self.state == ActionRunStatus.FAILED_RETRYABLE
 
-    def get_available_triggers(self) -> List[str]:
+    def get_available_triggers(self) -> list[str]:
         """获取当前状态下可用的触发器"""
-        return self.machine.get_triggers(self.state)
-
+        return self.machine.get_triggers(self._state)

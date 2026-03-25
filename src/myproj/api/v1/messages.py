@@ -1,7 +1,6 @@
 """Message API 端点"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
@@ -10,10 +9,10 @@ from pydantic import BaseModel, Field
 from myproj.api.deps import Pagination, get_message_id, get_thread_id
 from myproj.api.exceptions import NotFoundError
 from myproj.core.domain.message import (
-    Message,
-    MessageId,
     AuthoredMode,
     ChannelType,
+    Message,
+    MessageId,
 )
 from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.thread import ThreadId
@@ -28,17 +27,17 @@ class MessageCreateSchema(BaseModel):
     """创建Message请求"""
     sender_principal_id: UUID
     content: str = Field(..., min_length=1)
-    subject: Optional[str] = Field(None, max_length=500)
+    subject: str | None = Field(None, max_length=500)
     channel: ChannelType = ChannelType.INTERNAL
     authored_mode: AuthoredMode = AuthoredMode.HUMAN_AUTHORED_HUMAN_SENT
-    parent_message_id: Optional[UUID] = None
-    attachments: List[dict] = Field(default_factory=list)
+    parent_message_id: UUID | None = None
+    attachments: list[dict] = Field(default_factory=list)
 
 
 class MessageUpdateSchema(BaseModel):
     """更新Message请求（仅草稿可更新）"""
-    content: Optional[str] = Field(None, min_length=1)
-    subject: Optional[str] = Field(None, max_length=500)
+    content: str | None = Field(None, min_length=1)
+    subject: str | None = Field(None, max_length=500)
 
 
 class MessageResponseSchema(BaseModel):
@@ -48,18 +47,18 @@ class MessageResponseSchema(BaseModel):
     authored_mode: AuthoredMode
     channel: ChannelType
     sender_principal_id: UUID
-    author_principal_id: Optional[UUID]
-    approver_principal_id: Optional[UUID]
-    subject: Optional[str]
+    author_principal_id: UUID | None
+    approver_principal_id: UUID | None
+    subject: str | None
     content: str
-    parent_message_id: Optional[UUID]
-    external_message_id: Optional[str]
+    parent_message_id: UUID | None
+    external_message_id: str | None
     is_draft: bool
     is_sent: bool
     is_read: bool
-    sent_at: Optional[datetime]
-    delivered_at: Optional[datetime]
-    delivery_status: Optional[str]
+    sent_at: datetime | None
+    delivered_at: datetime | None
+    delivery_status: str | None
     created_at: datetime
     updated_at: datetime
     version: int
@@ -92,7 +91,7 @@ class MessageResponseSchema(BaseModel):
 
 class MessageListResponseSchema(BaseModel):
     """Message列表响应"""
-    items: List[MessageResponseSchema]
+    items: list[MessageResponseSchema]
     total: int
     offset: int
     limit: int
@@ -143,12 +142,12 @@ async def create_message(
     summary="查询线程消息列表",
 )
 async def list_messages(
+    pagination: Pagination,
     thread_id: UUID = Depends(get_thread_id),
-    channel: Optional[List[ChannelType]] = Query(None, description="渠道过滤"),
-    authored_mode: Optional[List[AuthoredMode]] = Query(None, description="创作模式过滤"),
-    is_draft: Optional[bool] = Query(None, description="是否草稿过滤"),
-    is_sent: Optional[bool] = Query(None, description="是否已发送过滤"),
-    pagination: Pagination = Depends(),
+    channel: list[ChannelType] | None = Query(None, description="渠道过滤"),
+    authored_mode: list[AuthoredMode] | None = Query(None, description="创作模式过滤"),
+    is_draft: bool | None = Query(None, description="是否草稿过滤"),
+    is_sent: bool | None = Query(None, description="是否已发送过滤"),
 ) -> MessageListResponseSchema:
     """查询Thread的Message列表"""
     tid = ThreadId(value=thread_id)
@@ -230,7 +229,6 @@ async def update_message(
     if data.subject is not None:
         message.update_subject(data.subject)
 
-    message.increment_version()
     return MessageResponseSchema.from_domain(message)
 
 
@@ -240,7 +238,7 @@ async def update_message(
     summary="发送消息",
 )
 async def send_message(
-    external_message_id: Optional[str] = None,
+    external_message_id: str | None = None,
     thread_id: UUID = Depends(get_thread_id),
     message_id: UUID = Depends(get_message_id),
 ) -> MessageResponseSchema:
@@ -258,7 +256,6 @@ async def send_message(
         raise ValidationError("Message already sent")
 
     message.mark_as_sent(external_message_id)
-    message.increment_version()
     return MessageResponseSchema.from_domain(message)
 
 
@@ -281,5 +278,4 @@ async def mark_message_read(
         raise NotFoundError(f"Message not found in thread: {thread_id}")
 
     message.mark_as_read()
-    message.increment_version()
     return MessageResponseSchema.from_domain(message)

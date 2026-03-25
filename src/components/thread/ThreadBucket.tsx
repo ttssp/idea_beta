@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { ThreadCard } from './ThreadCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Thread } from '@/lib/types/thread';
-import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ThreadBucketProps {
   id: string;

@@ -4,7 +4,7 @@ Action Risk Evaluator
 
 动作风险评估器
 """
-from typing import Optional
+
 from ..common.constants import RiskLevel
 from .models import RiskEvaluationResult
 
@@ -51,7 +51,7 @@ class ActionRiskEvaluator:
 
     def evaluate(
         self,
-        action_type: Optional[str] = None,
+        action_type: str | None = None,
     ) -> RiskEvaluationResult:
         """
         评估动作风险

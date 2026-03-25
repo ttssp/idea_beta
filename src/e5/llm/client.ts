@@ -6,7 +6,7 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config/index.js';
-import { MODEL_CONFIGS, getModelForTask, getFallbackModel, type ModelConfig } from '../config/models.js';
+import { MODEL_CONFIGS, getFallbackModel, type ModelConfig } from '../config/models.js';
 import { llmLogger } from '../utils/logger.js';
 import { createHash } from 'crypto';
 
@@ -175,8 +175,6 @@ export class MultiModelLLMClient implements LLMClient {
     modelConfig: ModelConfig,
     options?: LLMGenerateOptions
   ): Promise<LLMGenerateResult> {
-    const startTime = Date.now();
-
     if (modelConfig.provider === 'openai') {
       return this.generateWithOpenAI(messages, modelId, options);
     } else if (modelConfig.provider === 'anthropic') {

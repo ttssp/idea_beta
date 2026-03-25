@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 interface ThreadActionBarProps {
-  threadId: string;
+  threadId?: string;
   isPaused?: boolean;
   onPause?: () => void;
   onResume?: () => void;
@@ -27,7 +27,7 @@ interface ThreadActionBarProps {
 }
 
 export function ThreadActionBar({
-  threadId,
+  threadId: _threadId,
   isPaused = false,
   onPause,
   onResume,

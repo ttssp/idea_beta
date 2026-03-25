@@ -5,29 +5,27 @@ Delivery Status API
 API endpoints for delivery status management.
 """
 
-from typing import Dict, Any
+from typing import Any
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..deps import get_db, get_idempotency_manager
-from ...action_runtime.engine import ActionRunEngine
-from ...core.idempotency import IdempotencyManager
+from ..deps import get_db
 
 router = APIRouter(tags=["delivery"])
 
 
 @router.post("/delivery/status")
 async def delivery_status_callback(
-    request: Dict[str, Any],
+    request: dict[str, Any],
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     外部回执回调
     """
     delivery_id = request.get("delivery_id")
     status = request.get("status")
-    external_id = request.get("external_id")
 
     if not delivery_id or not status:
         raise HTTPException(status_code=400, detail="delivery_id and status are required")
@@ -42,7 +40,7 @@ async def delivery_status_callback(
 async def get_delivery_status(
     delivery_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     查询发送状态
     """
@@ -54,4 +52,3 @@ async def get_delivery_status(
         "timestamp": None,
         "detail": None
     }
-

@@ -3,16 +3,16 @@
 主应用入口
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from myproj import __version__
-from myproj.config import get_settings
 from myproj.api import api_v1_router
 from myproj.api.exceptions import register_exception_handlers
+from myproj.config import get_settings
 
 settings = get_settings()
 

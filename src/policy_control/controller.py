@@ -4,20 +4,19 @@ Policy & Control Controller
 
 主控制器：整合所有模块，提供统一的8步决策链接口
 """
-from typing import Optional, Dict, Any
+from typing import Any
 from uuid import UUID
-from datetime import datetime
 
-from .common.constants import Decision, RiskLevel, PolicyScope, PolicyEffect
-from .common.types import PolicyContext, RiskContext
+from .approval.service import ApprovalService
+from .common.constants import Decision, PolicyEffect, PolicyScope
 from .common.exceptions import KillSwitchActiveError
+from .common.types import PolicyContext, RiskContext
+from .decision_trace.recorder import DecisionRecorder
 from .delegation.service import DelegationService
+from .kill_switch.service import KillSwitchService
 from .policy.engine import PolicyEngine
 from .policy.evaluator import PolicyEvaluator
-from .approval.service import ApprovalService
 from .risk.synthesizer import RiskSynthesizer
-from .kill_switch.service import KillSwitchService
-from .decision_trace.recorder import DecisionRecorder
 
 
 class PolicyControlController:
@@ -74,13 +73,13 @@ class PolicyControlController:
         thread_id: UUID,
         action: str,
         action_type: str,
-        content: Optional[str] = None,
-        relationship_class: Optional[str] = None,
-        relationship_id: Optional[UUID] = None,
-        thread_objective: Optional[str] = None,
-        thread_status: Optional[str] = None,
-        action_run_id: Optional[UUID] = None,
-    ) -> Dict[str, Any]:
+        content: str | None = None,
+        relationship_class: str | None = None,
+        relationship_id: UUID | None = None,
+        thread_objective: str | None = None,
+        thread_status: str | None = None,
+        action_run_id: UUID | None = None,
+    ) -> dict[str, Any]:
         """
         8步决策链主入口
 

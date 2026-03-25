@@ -4,8 +4,8 @@ Policy API
 
 策略评估API
 """
-from typing import Optional, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 from ..common.types import PolicyContext, PolicyDecision
@@ -16,10 +16,10 @@ from ..policy.evaluator import PolicyEvaluator
 class PolicyEvaluationRequest:
     thread_id: UUID
     action: str
-    relationship_class: Optional[str] = None
-    thread_objective: Optional[str] = None
-    thread_status: Optional[str] = None
-    additional_context: Optional[Dict[str, Any]] = None
+    relationship_class: str | None = None
+    thread_objective: str | None = None
+    thread_status: str | None = None
+    additional_context: dict[str, Any] | None = None
 
 
 class PolicyAPI:
@@ -36,7 +36,7 @@ class PolicyAPI:
     def evaluate_policy(
         self,
         request: PolicyEvaluationRequest,
-        relationship_id: Optional[UUID] = None,
+        relationship_id: UUID | None = None,
     ) -> PolicyDecision:
         """
         POST /policy/evaluate

@@ -79,9 +79,24 @@ export class ActionGenerator {
 
   private validateAndParse(content: string, objective: string): ActionPlan {
     try {
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(content) as {
+        objective?: string;
+        steps?: Array<{
+          id?: string;
+          type?: ActionStep['type'];
+          description?: string;
+          dependencies?: string[];
+          suggestedTemplate?: string;
+          requiresApproval?: boolean;
+          estimatedDelayMinutes?: number;
+        }>;
+        estimatedDuration?: string;
+        risks?: string[];
+        confidence?: number;
+        suggestedPack?: string;
+      };
 
-      const steps: ActionStep[] = (parsed.steps || []).map((step: any, index: number) => ({
+      const steps: ActionStep[] = (parsed.steps || []).map((step, index) => ({
         id: step.id || `step_${index + 1}`,
         type: step.type || 'draft_message',
         description: step.description || '',

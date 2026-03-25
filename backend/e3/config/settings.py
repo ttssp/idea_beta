@@ -3,9 +3,9 @@
 Application Settings
 """
 
-from pydantic_settings import BaseSettings
-from typing import Optional, List
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -40,9 +40,9 @@ class Settings(BaseSettings):
     circuit_breaker_reset_timeout_seconds: int = 30
 
     # OAuth
-    google_client_id: Optional[str] = None
-    google_client_secret: Optional[str] = None
-    google_redirect_uri: Optional[str] = None
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    google_redirect_uri: str | None = None
 
     # Webhook
     webhook_secret: str = "dev-secret-change-in-production"
@@ -51,14 +51,14 @@ class Settings(BaseSettings):
     enable_prometheus: bool = True
 
     # CORS
-    cors_origins: List[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000"]
 
     class Config:
         env_prefix = "E3_"
         env_file = ".env"
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """获取配置单例"""
     return Settings()

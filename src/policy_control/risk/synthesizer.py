@@ -4,17 +4,16 @@ Risk Synthesizer
 
 合成决策器：四层风险合成 → 6种决策输出
 """
-from typing import Optional, Dict
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
-from ..common.constants import RiskLevel, Decision
+from ..common.constants import Decision, RiskLevel
 from ..common.types import RiskContext, RiskDecision
+from .action import ActionRiskEvaluator
+from .consequence import ConsequenceRiskEvaluator
+from .content import ContentRiskEvaluator
 from .models import RiskAssessment, RiskEvaluationResult
 from .relationship import RelationshipRiskEvaluator
-from .action import ActionRiskEvaluator
-from .content import ContentRiskEvaluator
-from .consequence import ConsequenceRiskEvaluator
 
 
 class RiskSynthesizer:
@@ -48,7 +47,7 @@ class RiskSynthesizer:
         self.action_risk = ActionRiskEvaluator()
         self.content_risk = ContentRiskEvaluator()
         self.consequence_risk = ConsequenceRiskEvaluator()
-        self._assessments: Dict[UUID, RiskAssessment] = {}
+        self._assessments: dict[UUID, RiskAssessment] = {}
 
     def evaluate(
         self,
@@ -247,6 +246,6 @@ class RiskSynthesizer:
         else:
             return RiskLevel.CRITICAL
 
-    def get_assessment(self, assessment_id: UUID) -> Optional[RiskAssessment]:
+    def get_assessment(self, assessment_id: UUID) -> RiskAssessment | None:
         """获取风险评估记录"""
         return self._assessments.get(assessment_id)

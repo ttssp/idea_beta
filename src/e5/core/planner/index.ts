@@ -16,7 +16,6 @@ export class ThreadPlanner {
     parsedGoal: ParsedGoal;
     reasoning: string;
   }> {
-    const startTime = Date.now();
     logger.info('Planning thread', { threadId: context.threadId });
 
     const parsedGoal = await goalParser.parse(context.objective, context);

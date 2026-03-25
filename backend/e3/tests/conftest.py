@@ -3,10 +3,11 @@
 Test Configuration
 """
 
-import pytest
 import asyncio
+from datetime import UTC, datetime
 from uuid import uuid4
-from datetime import datetime
+
+import pytest
 
 
 @pytest.fixture(scope="session")
@@ -26,5 +27,4 @@ def random_uuid():
 @pytest.fixture
 def now():
     """当前时间"""
-    return datetime.utcnow()
-
+    return datetime.now(UTC)

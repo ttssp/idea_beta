@@ -3,9 +3,9 @@
 Decision Trace Data Models
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
 from ..common.constants import Decision
 
@@ -17,10 +17,10 @@ class DecisionStep:
     step_number: int
     step_name: str
     description: str
-    input_data: Optional[Dict[str, Any]] = None
-    output_data: Optional[Dict[str, Any]] = None
+    input_data: dict[str, Any] | None = None
+    output_data: dict[str, Any] | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    duration_ms: Optional[int] = None
+    duration_ms: int | None = None
 
 
 @dataclass
@@ -29,12 +29,12 @@ class DecisionTrace:
 
     id: UUID = field(default_factory=uuid4)
     thread_id: UUID = field(default_factory=uuid4)
-    action_run_id: Optional[UUID] = None
+    action_run_id: UUID | None = None
     decision: Decision = Decision.REQUIRE_APPROVAL
-    decision_reason: Optional[str] = None
-    steps: List[DecisionStep] = field(default_factory=list)
-    policy_hits: Optional[List[Dict]] = None
-    risk_assessment_id: Optional[UUID] = None
+    decision_reason: str | None = None
+    steps: list[DecisionStep] = field(default_factory=list)
+    policy_hits: list[dict] | None = None
+    risk_assessment_id: UUID | None = None
     kill_switch_affected: bool = False
     created_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -43,9 +43,9 @@ class DecisionTrace:
         step_number: int,
         step_name: str,
         description: str,
-        input_data: Optional[Dict] = None,
-        output_data: Optional[Dict] = None,
-        duration_ms: Optional[int] = None,
+        input_data: dict | None = None,
+        output_data: dict | None = None,
+        duration_ms: int | None = None,
     ):
         """添加决策步骤"""
         step = DecisionStep(
@@ -59,7 +59,7 @@ class DecisionTrace:
         )
         self.steps.append(step)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             "id": str(self.id),

@@ -3,14 +3,12 @@
 Policy & Control Type Definitions
 """
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
-from datetime import datetime
 
 from .constants import (
     Decision,
     RiskLevel,
-    DelegationLevel,
 )
 
 
@@ -20,11 +18,11 @@ class PolicyContext:
 
     thread_id: UUID
     action: str
-    relationship_class: Optional[str] = None
-    delegation_profile_id: Optional[UUID] = None
-    thread_objective: Optional[str] = None
-    thread_status: Optional[str] = None
-    additional_context: Optional[Dict[str, Any]] = None
+    relationship_class: str | None = None
+    delegation_profile_id: UUID | None = None
+    thread_objective: str | None = None
+    thread_status: str | None = None
+    additional_context: dict[str, Any] | None = None
 
 
 @dataclass
@@ -33,11 +31,11 @@ class RiskContext:
 
     thread_id: UUID
     action: str
-    content: Optional[str] = None
-    relationship: Optional[Dict[str, Any]] = None
-    relationship_class: Optional[str] = None
-    action_type: Optional[str] = None
-    historical_data: Optional[Dict[str, Any]] = None
+    content: str | None = None
+    relationship: dict[str, Any] | None = None
+    relationship_class: str | None = None
+    action_type: str | None = None
+    historical_data: dict[str, Any] | None = None
 
 
 @dataclass
@@ -46,8 +44,8 @@ class PolicyDecision:
 
     decision: Decision
     reason: str
-    matched_rules: Optional[list] = None
-    metadata: Optional[Dict[str, Any]] = None
+    matched_rules: list | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass

@@ -4,9 +4,9 @@ Kill Switch Service
 
 熔断管理、联动逻辑
 """
-from typing import List, Optional, Dict, Callable
-from uuid import UUID
+from collections.abc import Callable
 from datetime import datetime
+from uuid import UUID
 
 from ..common.constants import KillSwitchLevel
 from ..common.exceptions import KillSwitchActiveError
@@ -26,9 +26,9 @@ class KillSwitchService:
     """
 
     def __init__(self):
-        self._switches: Dict[UUID, KillSwitch] = {}
-        self._on_activated_callbacks: List[Callable] = []
-        self._on_deactivated_callbacks: List[Callable] = []
+        self._switches: dict[UUID, KillSwitch] = {}
+        self._on_activated_callbacks: list[Callable] = []
+        self._on_deactivated_callbacks: list[Callable] = []
 
     def on_activated(self, callback: Callable):
         """注册熔断激活回调"""
@@ -43,7 +43,7 @@ class KillSwitchService:
         level: KillSwitchLevel,
         reason: str,
         activated_by: UUID,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ) -> KillSwitch:
         """
         激活熔断
@@ -85,7 +85,7 @@ class KillSwitchService:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -> Optional[KillSwitch]:
+    ) -> KillSwitch | None:
         """
         解除熔断
 
@@ -115,9 +115,9 @@ class KillSwitchService:
 
     def deactivate_all(
         self,
-        level: Optional[KillSwitchLevel] = None,
-        deactivated_by: Optional[UUID] = None,
-    ) -> List[KillSwitch]:
+        level: KillSwitchLevel | None = None,
+        deactivated_by: UUID | None = None,
+    ) -> list[KillSwitch]:
         """
         批量解除熔断
 
@@ -151,7 +151,7 @@ class KillSwitchService:
     def check(
         self,
         level: KillSwitchLevel,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ) -> bool:
         """
         检查是否有熔断生效
@@ -194,8 +194,8 @@ class KillSwitchService:
 
     def get_active_switches(
         self,
-        level: Optional[KillSwitchLevel] = None,
-    ) -> List[KillSwitch]:
+        level: KillSwitchLevel | None = None,
+    ) -> list[KillSwitch]:
         """
         获取当前生效的熔断
 
@@ -210,14 +210,14 @@ class KillSwitchService:
             switches = [s for s in switches if s.level == level]
         return switches
 
-    def get_switch(self, switch_id: UUID) -> Optional[KillSwitch]:
+    def get_switch(self, switch_id: UUID) -> KillSwitch | None:
         """获取熔断开关"""
         return self._switches.get(switch_id)
 
     def ensure_not_triggered(
         self,
         level: KillSwitchLevel,
-        level_id: Optional[UUID] = None,
+        level_id: UUID | None = None,
     ):
         """
         确保没有熔断触发，否则抛出异常
@@ -234,8 +234,8 @@ class KillSwitchService:
     def _find_existing_active(
         self,
         level: KillSwitchLevel,
-        level_id: Optional[UUID] = None,
-    ) -> Optional[KillSwitch]:
+        level_id: UUID | None = None,
+    ) -> KillSwitch | None:
         """查找已存在的活跃熔断"""
         for switch in self._switches.values():
             if not switch.is_active:

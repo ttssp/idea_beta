@@ -1,20 +1,19 @@
 """Principal API 端点"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, str, Field
+from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel, Field
 
-from myproj.api.deps import DbSession, Pagination, get_principal_id
+from myproj.api.deps import Pagination, get_principal_id
 from myproj.api.exceptions import NotFoundError
 from myproj.core.domain.principal import (
+    DisclosureMode,
     Principal,
     PrincipalId,
     PrincipalType,
     TrustTier,
-    DisclosureMode,
 )
 
 router = APIRouter(prefix="/principals", tags=["principals"])
@@ -27,26 +26,26 @@ class PrincipalCreateSchema(BaseModel):
     """创建Principal请求"""
     principal_type: PrincipalType
     display_name: str = Field(..., min_length=1, max_length=200)
-    email: Optional[str] = None
-    phone: Optional[str] = Field(None, max_length=50)
-    external_id: Optional[str] = Field(None, max_length=255)
+    email: str | None = None
+    phone: str | None = Field(None, max_length=50)
+    external_id: str | None = Field(None, max_length=255)
     trust_tier: TrustTier = TrustTier.UNKNOWN
     disclosure_mode: DisclosureMode = DisclosureMode.SEMI
-    timezone: Optional[str] = Field(None, max_length=100)
-    locale: Optional[str] = Field(None, max_length=20)
+    timezone: str | None = Field(None, max_length=100)
+    locale: str | None = Field(None, max_length=20)
 
 
 class PrincipalUpdateSchema(BaseModel):
     """更新Principal请求"""
-    display_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    email: Optional[str] = None
-    phone: Optional[str] = Field(None, max_length=50)
-    trust_tier: Optional[TrustTier] = None
-    disclosure_mode: Optional[DisclosureMode] = None
-    disclosure_template: Optional[str] = Field(None, max_length=500)
-    timezone: Optional[str] = Field(None, max_length=100)
-    locale: Optional[str] = Field(None, max_length=20)
-    is_active: Optional[bool] = None
+    display_name: str | None = Field(None, min_length=1, max_length=200)
+    email: str | None = None
+    phone: str | None = Field(None, max_length=50)
+    trust_tier: TrustTier | None = None
+    disclosure_mode: DisclosureMode | None = None
+    disclosure_template: str | None = Field(None, max_length=500)
+    timezone: str | None = Field(None, max_length=100)
+    locale: str | None = Field(None, max_length=20)
+    is_active: bool | None = None
 
 
 class PrincipalResponseSchema(BaseModel):
@@ -54,15 +53,15 @@ class PrincipalResponseSchema(BaseModel):
     id: UUID
     principal_type: PrincipalType
     display_name: str
-    email: Optional[str]
-    phone: Optional[str]
-    external_id: Optional[str]
+    email: str | None
+    phone: str | None
+    external_id: str | None
     trust_tier: TrustTier
     disclosure_mode: DisclosureMode
     is_active: bool
     is_verified: bool
-    timezone: Optional[str]
-    locale: Optional[str]
+    timezone: str | None
+    locale: str | None
     created_at: datetime
     updated_at: datetime
     version: int
@@ -90,7 +89,7 @@ class PrincipalResponseSchema(BaseModel):
 
 class PrincipalListResponseSchema(BaseModel):
     """Principal列表响应"""
-    items: List[PrincipalResponseSchema]
+    items: list[PrincipalResponseSchema]
     total: int
     offset: int
     limit: int
@@ -139,10 +138,10 @@ async def create_principal(
     summary="查询主体列表",
 )
 async def list_principals(
-    principal_type: Optional[List[PrincipalType]] = Query(None, description="类型过滤"),
-    trust_tier: Optional[List[TrustTier]] = Query(None, description="信任等级过滤"),
-    is_active: Optional[bool] = Query(None, description="是否启用过滤"),
-    pagination: Pagination = Depends(),
+    pagination: Pagination,
+    principal_type: list[PrincipalType] | None = Query(None, description="类型过滤"),
+    trust_tier: list[TrustTier] | None = Query(None, description="信任等级过滤"),
+    is_active: bool | None = Query(None, description="是否启用过滤"),
 ) -> PrincipalListResponseSchema:
     """查询Principal列表"""
     principals = list(_principals.values())
@@ -209,8 +208,7 @@ async def update_principal(
         principal.update_email(data.email, principal.is_verified)
 
     if data.phone is not None:
-        principal.phone = data.phone
-        principal.updated_at = datetime.utcnow()
+        principal.update_phone(data.phone)
 
     if data.trust_tier is not None:
         principal.set_trust_tier(data.trust_tier)
@@ -219,16 +217,13 @@ async def update_principal(
         principal.set_disclosure_mode(data.disclosure_mode)
 
     if data.disclosure_template is not None:
-        principal.disclosure_template = data.disclosure_template
-        principal.updated_at = datetime.utcnow()
+        principal.set_disclosure_template(data.disclosure_template)
 
     if data.timezone is not None:
-        principal.timezone = data.timezone
-        principal.updated_at = datetime.utcnow()
+        principal.set_timezone(data.timezone)
 
     if data.locale is not None:
-        principal.locale = data.locale
-        principal.updated_at = datetime.utcnow()
+        principal.set_locale(data.locale)
 
     if data.is_active is not None:
         if data.is_active:
@@ -236,7 +231,6 @@ async def update_principal(
         else:
             principal.deactivate()
 
-    principal.increment_version()
     return PrincipalResponseSchema.from_domain(principal)
 
 
@@ -255,7 +249,6 @@ async def block_principal(
         raise NotFoundError(f"Principal not found: {principal_id}")
 
     principal.block()
-    principal.increment_version()
     return PrincipalResponseSchema.from_domain(principal)
 
 
@@ -274,5 +267,4 @@ async def unblock_principal(
         raise NotFoundError(f"Principal not found: {principal_id}")
 
     principal.unblock()
-    principal.increment_version()
     return PrincipalResponseSchema.from_domain(principal)

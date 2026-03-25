@@ -5,13 +5,13 @@ External Resolver
 Resolves external messages to internal Threads.
 """
 
-from typing import Optional, Tuple
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from .models import ExternalBinding, BindingTypeEnum, SyncStateEnum, ChannelTypeEnum
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..outbox_inbox.models import InboxEvent
+from .models import ExternalBinding, SyncStateEnum
 
 
 class ExternalResolver:
@@ -28,8 +28,8 @@ class ExternalResolver:
         self,
         channel_type: str,
         external_thread_key: str,
-        external_message_key: Optional[str] = None,
-    ) -> Tuple[Optional[UUID], bool]:
+        external_message_key: str | None = None,
+    ) -> tuple[UUID | None, bool]:
         """
         解析外部消息到内部Thread
 
@@ -70,9 +70,9 @@ class ExternalResolver:
         thread_id: UUID,
         channel_type: str,
         external_thread_key: str,
-        external_message_key: Optional[str] = None,
+        external_message_key: str | None = None,
         binding_type: str = "primary",
-        sync_token: Optional[str] = None
+        sync_token: str | None = None
     ) -> ExternalBinding:
         """
         创建外部绑定
@@ -124,7 +124,7 @@ class ExternalResolver:
         self,
         channel_type: str,
         external_thread_key: str
-    ) -> Optional[ExternalBinding]:
+    ) -> ExternalBinding | None:
         """获取绑定"""
         result = await self.db.execute(
             select(ExternalBinding).where(
@@ -147,7 +147,7 @@ class ExternalResolver:
     async def pause_binding(
         self,
         binding_id: UUID
-    ) -> Optional[ExternalBinding]:
+    ) -> ExternalBinding | None:
         """暂停绑定"""
         result = await self.db.execute(
             select(ExternalBinding).where(ExternalBinding.id == binding_id)
@@ -162,7 +162,7 @@ class ExternalResolver:
     async def resume_binding(
         self,
         binding_id: UUID
-    ) -> Optional[ExternalBinding]:
+    ) -> ExternalBinding | None:
         """恢复绑定"""
         result = await self.db.execute(
             select(ExternalBinding).where(ExternalBinding.id == binding_id)
@@ -177,7 +177,7 @@ class ExternalResolver:
     async def archive_binding(
         self,
         binding_id: UUID
-    ) -> Optional[ExternalBinding]:
+    ) -> ExternalBinding | None:
         """归档绑定"""
         result = await self.db.execute(
             select(ExternalBinding).where(ExternalBinding.id == binding_id)
@@ -192,16 +192,16 @@ class ExternalResolver:
     async def update_last_synced(
         self,
         binding_id: UUID,
-        sync_token: Optional[str] = None
-    ) -> Optional[ExternalBinding]:
+        sync_token: str | None = None
+    ) -> ExternalBinding | None:
         """更新最后同步时间"""
-        from datetime import datetime
+        from datetime import UTC, datetime
         result = await self.db.execute(
             select(ExternalBinding).where(ExternalBinding.id == binding_id)
         )
         binding = result.scalar_one_or_none()
         if binding:
-            binding.last_synced_at = datetime.utcnow()
+            binding.last_synced_at = datetime.now(UTC)
             if sync_token:
                 binding.sync_token = sync_token
             await self.db.commit()
@@ -212,7 +212,7 @@ class ExternalResolver:
         self,
         channel_type: str,
         external_message_key: str
-    ) -> Optional[UUID]:
+    ) -> UUID | None:
         """通过消息关联查找Thread"""
         # 查找是否有其他绑定使用了这个message_key
         result = await self.db.execute(
@@ -234,4 +234,3 @@ class ExternalResolver:
             )
         )
         return inbox_result.scalar_one_or_none()
-

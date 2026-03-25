@@ -1,16 +1,13 @@
 """Thread 状态机服务"""
 
-from datetime import datetime
-from typing import Optional
 
+from myproj.core.domain.event import (
+    ThreadEvent,
+)
 from myproj.core.domain.thread import (
     Thread,
     ThreadStatus,
     can_transition,
-)
-from myproj.core.domain.event import (
-    ThreadEvent,
-    EventType,
 )
 
 
@@ -51,7 +48,7 @@ class ThreadStateMachine:
         self,
         thread: Thread,
         to_status: ThreadStatus,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """
         执行状态流转
@@ -128,7 +125,7 @@ class ThreadStateMachine:
     def cancel(
         self,
         thread: Thread,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """取消线程"""
         if thread.is_terminal:
@@ -153,7 +150,7 @@ class ThreadStateMachine:
     def wait_for_external(
         self,
         thread: Thread,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """等待外部回复"""
         return self.transition(
@@ -165,7 +162,7 @@ class ThreadStateMachine:
     def wait_for_approval(
         self,
         thread: Thread,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> tuple[Thread, ThreadEvent]:
         """等待审批"""
         return self.transition(

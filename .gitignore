@@ -136,6 +136,7 @@ coverage/
 # Cache
 .cache/
 .temp/
+*.tsbuildinfo
 
 # OS files
 .DS_Store

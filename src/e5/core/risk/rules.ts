@@ -26,12 +26,11 @@ export interface RiskRule {
 const idCardRegex = /(^|[^\d])\d{17}[\dXx]([^\d]|$)/;
 const bankCardRegex = /(^|[^\d])\d{16,19}([^\d]|$)/;
 const phoneRegex = /(^|[^\d])1[3-9]\d{9}([^\d]|$)/;
-const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 
 const amountRegexes = [
   /(?:金额|价格|费用|报价|预算|支付|付款|折扣|优惠)(?:\s*[:：]\s*)?[¥￥$€£]?\s*\d+(?:[,.]\d+)*(?:\s*[万亿千百十元]*)?/gi,
   /[¥￥$€£]\s*\d+(?:[,.]\d+)*(?:\s*[万亿千百十元]*)?/g,
-  /\d+(?:[,.]\d+)*\s*(?:元|美元|欧元|英镑|万|千|百)(?:?!月|日|年|个|人)/g,
+  /\d+(?:[,.]\d+)*\s*(?:元|美元|欧元|英镑|万|千|百)(?!月|日|年|个|人)/g,
 ];
 
 const commitmentRegexes = [

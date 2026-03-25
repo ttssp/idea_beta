@@ -1,21 +1,20 @@
 """Relationship API 端点"""
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from myproj.api.deps import DbSession, Pagination, get_relationship_id
+from myproj.api.deps import Pagination, get_relationship_id
 from myproj.api.exceptions import NotFoundError
+from myproj.core.domain.principal import PrincipalId
 from myproj.core.domain.relationship import (
     Relationship,
-    RelationshipId,
     RelationshipClass,
+    RelationshipId,
     SensitivityLevel,
 )
-from myproj.core.domain.principal import PrincipalId
 
 router = APIRouter(prefix="/relationships", tags=["relationships"])
 
@@ -29,20 +28,20 @@ class RelationshipCreateSchema(BaseModel):
     to_principal_id: UUID
     relationship_class: RelationshipClass
     sensitivity: SensitivityLevel = SensitivityLevel.MEDIUM
-    alias: Optional[str] = Field(None, max_length=200)
-    notes: Optional[str] = Field(None, max_length=2000)
-    tags: List[str] = Field(default_factory=list)
+    alias: str | None = Field(None, max_length=200)
+    notes: str | None = Field(None, max_length=2000)
+    tags: list[str] = Field(default_factory=list)
 
 
 class RelationshipUpdateSchema(BaseModel):
     """更新Relationship请求"""
-    relationship_class: Optional[RelationshipClass] = None
-    sensitivity: Optional[SensitivityLevel] = None
-    alias: Optional[str] = Field(None, max_length=200)
-    notes: Optional[str] = Field(None, max_length=2000)
-    tags: Optional[List[str]] = None
-    is_active: Optional[bool] = None
-    is_favorite: Optional[bool] = None
+    relationship_class: RelationshipClass | None = None
+    sensitivity: SensitivityLevel | None = None
+    alias: str | None = Field(None, max_length=200)
+    notes: str | None = Field(None, max_length=2000)
+    tags: list[str] | None = None
+    is_active: bool | None = None
+    is_favorite: bool | None = None
 
 
 class RelationshipResponseSchema(BaseModel):
@@ -52,14 +51,14 @@ class RelationshipResponseSchema(BaseModel):
     to_principal_id: UUID
     relationship_class: RelationshipClass
     sensitivity: SensitivityLevel
-    alias: Optional[str]
-    notes: Optional[str]
-    tags: List[str]
+    alias: str | None
+    notes: str | None
+    tags: list[str]
     is_active: bool
     is_favorite: bool
     interaction_count: int
-    first_interaction_at: Optional[datetime]
-    last_interaction_at: Optional[datetime]
+    first_interaction_at: datetime | None
+    last_interaction_at: datetime | None
     created_at: datetime
     updated_at: datetime
     version: int
@@ -88,7 +87,7 @@ class RelationshipResponseSchema(BaseModel):
 
 class RelationshipListResponseSchema(BaseModel):
     """Relationship列表响应"""
-    items: List[RelationshipResponseSchema]
+    items: list[RelationshipResponseSchema]
     total: int
     offset: int
     limit: int
@@ -145,13 +144,13 @@ async def create_relationship(
     summary="查询关系列表",
 )
 async def list_relationships(
-    from_principal_id: Optional[UUID] = Query(None, description="发起方ID"),
-    to_principal_id: Optional[UUID] = Query(None, description="目标方ID"),
-    relationship_class: Optional[List[RelationshipClass]] = Query(None, description="关系类别过滤"),
-    sensitivity: Optional[List[SensitivityLevel]] = Query(None, description="敏感度过滤"),
-    is_active: Optional[bool] = Query(None, description="是否启用过滤"),
-    is_favorite: Optional[bool] = Query(None, description="是否收藏过滤"),
-    pagination: Pagination = Depends(),
+    pagination: Pagination,
+    from_principal_id: UUID | None = Query(None, description="发起方ID"),
+    to_principal_id: UUID | None = Query(None, description="目标方ID"),
+    relationship_class: list[RelationshipClass] | None = Query(None, description="关系类别过滤"),
+    sensitivity: list[SensitivityLevel] | None = Query(None, description="敏感度过滤"),
+    is_active: bool | None = Query(None, description="是否启用过滤"),
+    is_favorite: bool | None = Query(None, description="是否收藏过滤"),
 ) -> RelationshipListResponseSchema:
     """查询Relationship列表"""
     rels = list(_relationships.values())
@@ -233,8 +232,7 @@ async def update_relationship(
         rel.set_notes(data.notes)
 
     if data.tags is not None:
-        rel.tags = data.tags
-        rel.updated_at = datetime.utcnow()
+        rel.replace_tags(data.tags)
 
     if data.is_favorite is not None and data.is_favorite != rel.is_favorite:
         rel.toggle_favorite()
@@ -245,7 +243,6 @@ async def update_relationship(
         else:
             rel.deactivate()
 
-    rel.increment_version()
     return RelationshipResponseSchema.from_domain(rel)
 
 
@@ -264,5 +261,4 @@ async def record_interaction(
         raise NotFoundError(f"Relationship not found: {relationship_id}")
 
     rel.record_interaction()
-    rel.increment_version()
     return RelationshipResponseSchema.from_domain(rel)

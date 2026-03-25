@@ -7,7 +7,7 @@ import Fastify from 'fastify';
 import {
   serializerCompiler,
   validatorCompiler,
-  ZodTypeProvider,
+  type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';

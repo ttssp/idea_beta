@@ -4,20 +4,19 @@ Approval API
 
 审批管理API
 """
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 from uuid import UUID
 
-from ..common.constants import ApprovalStatus, RequestType, TimeoutAction
 from ..approval.models import ApprovalRequest, ApprovalResolution
 from ..approval.service import ApprovalService
+from ..common.constants import ApprovalStatus
 
 
 @dataclass
 class ResolveApprovalRequest:
     action: str  # APPROVE, REJECT, MODIFY, TAKEOVER
-    modified_content: Optional[str] = None
-    reason: Optional[str] = None
+    modified_content: str | None = None
+    reason: str | None = None
 
 
 class ApprovalAPI:
@@ -35,11 +34,11 @@ class ApprovalAPI:
 
     def get_approvals(
         self,
-        thread_id: Optional[UUID] = None,
-        status: Optional[ApprovalStatus] = None,
-        approver_principal_id: Optional[UUID] = None,
+        thread_id: UUID | None = None,
+        status: ApprovalStatus | None = None,
+        approver_principal_id: UUID | None = None,
         limit: int = 100,
-    ) -> List[ApprovalRequest]:
+    ) -> list[ApprovalRequest]:
         """
         GET /approvals
 
@@ -52,7 +51,7 @@ class ApprovalAPI:
             limit=limit,
         )
 
-    def get_approval(self, approval_id: UUID) -> Optional[ApprovalRequest]:
+    def get_approval(self, approval_id: UUID) -> ApprovalRequest | None:
         """
         GET /approvals/{id}
 

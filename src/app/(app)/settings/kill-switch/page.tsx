@@ -9,8 +9,6 @@ import { useState } from 'react';
 
 export default function KillSwitchPage() {
   const [globalActive, setGlobalActive] = useState(false);
-  const [profileActive, setProfileActive] = useState<Record<string, boolean>>({});
-  const [threadActive, setThreadActive] = useState<Record<string, boolean>>({});
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

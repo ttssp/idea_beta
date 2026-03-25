@@ -4,11 +4,9 @@ Delegation API
 
 委托档位管理API
 """
-from typing import List, Optional
-from uuid import UUID
 from dataclasses import dataclass
+from uuid import UUID
 
-from ..common.constants import DelegationLevel
 from ..delegation.models import DelegationProfile
 from ..delegation.service import DelegationService
 
@@ -39,7 +37,7 @@ class DelegationAPI:
     def get_delegation_profiles(
         self,
         include_system: bool = True,
-    ) -> List[DelegationProfile]:
+    ) -> list[DelegationProfile]:
         """
         GET /delegation-profiles
 
@@ -51,7 +49,7 @@ class DelegationAPI:
         self,
         thread_id: UUID,
         request: SetThreadProfileRequest,
-        bound_by: Optional[UUID] = None,
+        bound_by: UUID | None = None,
     ) -> bool:
         """
         POST /threads/{id}/delegation-profile
@@ -69,7 +67,7 @@ class DelegationAPI:
         self,
         relationship_id: UUID,
         request: SetRelationshipProfileRequest,
-        bound_by: Optional[UUID] = None,
+        bound_by: UUID | None = None,
     ) -> bool:
         """
         POST /relationships/{id}/delegation-profile

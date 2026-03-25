@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { mockThreads, mockReplayEvents } from '@/mocks';
-import { ArrowLeft, Clock, User } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ export default function ReplayDetailPage({ params }: ReplayDetailPageProps) {
             {/* Timeline line */}
             <div className="absolute left-3 top-4 bottom-4 w-0.5 bg-border" />
 
-            {events.map((event, index) => (
+            {events.map((event) => (
               <div key={event.id} className="relative pb-8">
                 {/* Dot */}
                 <div className="absolute left-[-20px] top-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted">

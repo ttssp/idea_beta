@@ -4,6 +4,12 @@ import { SSE_URL, SSE_RECONNECT_DELAY, SSE_MAX_RECONNECT_ATTEMPTS } from '@/lib/
 import type { Thread, ApprovalRequest } from '@/lib/types';
 
 type EventType = 'thread_update' | 'approval_update' | 'thread_created' | 'ping';
+type EventHandlerMap = {
+  thread_update: (thread: Thread) => void;
+  approval_update: (approval: ApprovalRequest) => void;
+  thread_created: (thread: Thread) => void;
+  ping: () => void;
+};
 
 interface EventHandlers {
   onThreadUpdate?: (thread: Thread) => void;
@@ -78,8 +84,8 @@ export class SSEClient {
       this.eventSource.onerror = (error) => {
         this.handleError(error);
       };
-    } catch (error) {
-      this.handleError(error);
+    } catch (error: unknown) {
+      this.handleError(this.toError(error));
     }
   }
 
@@ -92,16 +98,16 @@ export class SSEClient {
     }
   }
 
-  on(event: EventType, handler: (...args: any[]) => void): void {
+  on<T extends EventType>(event: T, handler: EventHandlerMap[T]): void {
     switch (event) {
       case 'thread_update':
-        this.handlers.onThreadUpdate = handler as (thread: Thread) => void;
+        this.handlers.onThreadUpdate = handler as EventHandlerMap['thread_update'];
         break;
       case 'approval_update':
-        this.handlers.onApprovalUpdate = handler as (approval: ApprovalRequest) => void;
+        this.handlers.onApprovalUpdate = handler as EventHandlerMap['approval_update'];
         break;
       case 'thread_created':
-        this.handlers.onThreadCreated = handler as (thread: Thread) => void;
+        this.handlers.onThreadCreated = handler as EventHandlerMap['thread_created'];
         break;
     }
   }
@@ -146,6 +152,13 @@ export class SSEClient {
         }
       }, delay);
     }
+  }
+
+  private toError(error: unknown): Error {
+    if (error instanceof Error) {
+      return error;
+    }
+    return new Error('Unknown SSE error');
   }
 
   isConnected(): boolean {

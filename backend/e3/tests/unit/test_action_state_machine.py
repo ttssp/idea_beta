@@ -5,7 +5,6 @@ Unit Tests: ActionRun State Machine
 Tests for AR-001 to AR-011
 """
 
-import pytest
 from ...action_runtime.state_machine import ActionRunStateMachine, ActionRunStatus
 
 

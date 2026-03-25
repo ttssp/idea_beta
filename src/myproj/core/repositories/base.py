@@ -1,17 +1,12 @@
 """仓储基类"""
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-EntityId = TypeVar("EntityId")
-Entity = TypeVar("Entity")
-Model = TypeVar("Model")
 
-
-class BaseRepository(ABC, Generic[EntityId, Entity, Model]):
+class BaseRepository[EntityId, Entity, Model](ABC):
     """仓储基类"""
 
     def __init__(self, session: Session):
@@ -27,14 +22,14 @@ class BaseRepository(ABC, Generic[EntityId, Entity, Model]):
         """将领域实体转换为数据库模型"""
         pass
 
-    def get(self, entity_id: EntityId) -> Optional[Entity]:
+    def get(self, entity_id: EntityId) -> Entity | None:
         """根据ID获取实体"""
         model = self.session.query(self._model_class()).get(self._to_id_value(entity_id))
         if not model:
             return None
         return self._to_entity(model)
 
-    def get_by_uuid(self, uuid: UUID) -> Optional[Entity]:
+    def get_by_uuid(self, uuid: UUID) -> Entity | None:
         """根据UUID获取实体"""
         model = self.session.query(self._model_class()).get(uuid)
         if not model:
@@ -45,7 +40,7 @@ class BaseRepository(ABC, Generic[EntityId, Entity, Model]):
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> List[Entity]:
+    ) -> list[Entity]:
         """列出实体"""
         models = (
             self.session.query(self._model_class())

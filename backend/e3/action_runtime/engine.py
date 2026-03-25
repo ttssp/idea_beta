@@ -5,15 +5,16 @@ Action Execution Engine
 Core engine for managing ActionRun lifecycle.
 """
 
-from typing import Optional, Dict, Any
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
-from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..core.idempotency import IdempotencyManager
 from .models import ActionRun, ActionRunStatusHistory
 from .state_machine import ActionRunStateMachine, ActionRunStatus
-from ..core.idempotency import IdempotencyManager
 
 
 class ActionRunEngine:
@@ -30,7 +31,7 @@ class ActionRunEngine:
     def __init__(
         self,
         db: AsyncSession,
-        idempotency: Optional[IdempotencyManager] = None
+        idempotency: IdempotencyManager | None = None
     ):
         self.db = db
         self.idempotency = idempotency
@@ -39,9 +40,9 @@ class ActionRunEngine:
         self,
         thread_id: UUID,
         action_type: str,
-        input_payload: Dict[str, Any],
+        input_payload: dict[str, Any],
         idempotency_key: str,
-        scheduled_for: Optional[datetime] = None
+        scheduled_for: datetime | None = None
     ) -> ActionRun:
         """
         创建新的ActionRun
@@ -87,7 +88,7 @@ class ActionRunEngine:
 
         return action_run
 
-    async def plan_action(self, action_run_id: UUID, input_payload: Optional[Dict[str, Any]] = None) -> ActionRun:
+    async def plan_action(self, action_run_id: UUID, input_payload: dict[str, Any] | None = None) -> ActionRun:
         """
         规划动作：created → planned
 
@@ -198,8 +199,8 @@ class ActionRunEngine:
         sm.start_execution()
 
         action_run.status = sm.state
-        action_run.executed_at = datetime.utcnow()
-        action_run.last_attempted_at = datetime.utcnow()
+        action_run.executed_at = datetime.now(UTC)
+        action_run.last_attempted_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action_run)
 
@@ -216,9 +217,9 @@ class ActionRunEngine:
     async def mark_send_success(
         self,
         action_run_id: UUID,
-        output_payload: Optional[Dict[str, Any]] = None,
-        external_message_id: Optional[str] = None,
-        external_thread_id: Optional[str] = None
+        output_payload: dict[str, Any] | None = None,
+        external_message_id: str | None = None,
+        external_thread_id: str | None = None
     ) -> ActionRun:
         """
         标记发送成功：executing → sent
@@ -262,7 +263,7 @@ class ActionRunEngine:
         action_run.status = sm.state
         action_run.retry_count += 1
         action_run.last_error = error
-        action_run.last_attempted_at = datetime.utcnow()
+        action_run.last_attempted_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action_run)
 
@@ -290,7 +291,7 @@ class ActionRunEngine:
 
         action_run.status = sm.state
         action_run.last_error = error
-        action_run.last_attempted_at = datetime.utcnow()
+        action_run.last_attempted_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action_run)
 
@@ -331,7 +332,7 @@ class ActionRunEngine:
         sm.retry()
 
         action_run.status = sm.state
-        action_run.last_attempted_at = datetime.utcnow()
+        action_run.last_attempted_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action_run)
 
@@ -394,14 +395,14 @@ class ActionRunEngine:
 
         return action_run
 
-    async def get_action_run(self, action_run_id: UUID) -> Optional[ActionRun]:
+    async def get_action_run(self, action_run_id: UUID) -> ActionRun | None:
         """获取ActionRun"""
         return await self._get_action_run(action_run_id)
 
     async def list_by_thread(
         self,
         thread_id: UUID,
-        status: Optional[str] = None,
+        status: str | None = None,
         limit: int = 50
     ) -> list[ActionRun]:
         """列出Thread的所有ActionRun"""
@@ -425,11 +426,11 @@ class ActionRunEngine:
     async def _record_state_change(
         self,
         action_run_id: UUID,
-        from_status: Optional[str],
+        from_status: str | None,
         to_status: str,
         event_type: str,
-        event_payload: Dict[str, Any],
-        actor: Optional[str] = None
+        event_payload: dict[str, Any],
+        actor: str | None = None
     ):
         """记录状态变更历史"""
         history = ActionRunStatusHistory(
@@ -442,4 +443,3 @@ class ActionRunEngine:
         )
         self.db.add(history)
         await self.db.commit()
-

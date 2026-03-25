@@ -3,9 +3,9 @@
 Approval Engine Data Models
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
-from datetime import datetime, timedelta
 
 from ..common.constants import ApprovalStatus, RequestType, TimeoutAction
 
@@ -16,18 +16,18 @@ class ApprovalRequest:
 
     id: UUID = field(default_factory=uuid4)
     thread_id: UUID = field(default_factory=uuid4)
-    action_run_id: Optional[UUID] = None
+    action_run_id: UUID | None = None
     request_type: RequestType = RequestType.MESSAGE_SEND
     reason_code: str = ""
-    reason_description: Optional[str] = None
+    reason_description: str | None = None
     requester_principal_id: UUID = field(default_factory=uuid4)
-    approver_principal_id: Optional[UUID] = None
+    approver_principal_id: UUID | None = None
     status: ApprovalStatus = ApprovalStatus.PENDING
-    preview: Optional[Dict[str, Any]] = None
-    resolution: Optional[Dict[str, Any]] = None
-    resolved_at: Optional[datetime] = None
-    resolved_by: Optional[UUID] = None
-    timeout_at: Optional[datetime] = None
+    preview: dict[str, Any] | None = None
+    resolution: dict[str, Any] | None = None
+    resolved_at: datetime | None = None
+    resolved_by: UUID | None = None
+    timeout_at: datetime | None = None
     timeout_action: TimeoutAction = TimeoutAction.ESCALATE
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
@@ -52,6 +52,6 @@ class ApprovalResolution:
     """审批决议"""
 
     action: str  # APPROVE, REJECT, MODIFY, TAKEOVER
-    modified_content: Optional[str] = None
-    reason: Optional[str] = None
+    modified_content: str | None = None
+    reason: str | None = None
     resolved_by: UUID = field(default_factory=uuid4)

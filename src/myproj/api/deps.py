@@ -1,13 +1,12 @@
 """API 依赖注入"""
 
-from typing import Annotated, Generator
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from myproj.infra.db import get_db
-
 
 # ============================================
 # Database 依赖

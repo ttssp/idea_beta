@@ -5,19 +5,15 @@ Outbox Pattern - Producer
 Implements the outbox pattern for reliable message delivery.
 """
 
-from typing import Optional, Dict, Any
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
-from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func as sa_func
 
-from .models import (
-    OutboxMessage,
-    OutboxDeadLetter,
-    OutboxStatusEnum,
-    ChannelTypeEnum
-)
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..core.idempotency import IdempotencyManager
+from .models import OutboxDeadLetter, OutboxMessage, OutboxStatusEnum
 
 
 class OutboxProducer:
@@ -27,7 +23,7 @@ class OutboxProducer:
     负责将消息写入Outbox表（在同一事务中）
     """
 
-    def __init__(self, db: AsyncSession, idempotency: Optional[IdempotencyManager] = None):
+    def __init__(self, db: AsyncSession, idempotency: IdempotencyManager | None = None):
         self.db = db
         self.idempotency = idempotency
 
@@ -37,9 +33,9 @@ class OutboxProducer:
         action_run_id: UUID,
         channel_type: str,
         message_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
         idempotency_key: str,
-        scheduled_for: Optional[datetime] = None,
+        scheduled_for: datetime | None = None,
         max_retries: int = 5
     ) -> OutboxMessage:
         """
@@ -61,7 +57,7 @@ class OutboxProducer:
             创建的OutboxMessage
         """
         if scheduled_for is None:
-            scheduled_for = datetime.utcnow()
+            scheduled_for = datetime.now(UTC)
 
         # 检查幂等
         existing = await self.db.execute(
@@ -90,7 +86,7 @@ class OutboxProducer:
     async def get_pending_messages(
         self,
         limit: int = 100,
-        channel_type: Optional[str] = None
+        channel_type: str | None = None
     ) -> list[OutboxMessage]:
         """
         获取待处理的消息
@@ -106,7 +102,7 @@ class OutboxProducer:
             select(OutboxMessage)
             .where(
                 OutboxMessage.status == OutboxStatusEnum.PENDING,
-                OutboxMessage.scheduled_for <= datetime.utcnow()
+                OutboxMessage.scheduled_for <= datetime.now(UTC)
             )
             .order_by(OutboxMessage.scheduled_for.asc())
             .limit(limit)
@@ -117,7 +113,7 @@ class OutboxProducer:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def mark_processing(self, outbox_id: UUID) -> Optional[OutboxMessage]:
+    async def mark_processing(self, outbox_id: UUID) -> OutboxMessage | None:
         """标记消息为处理中（使用FOR UPDATE SKIP LOCKED）"""
         result = await self.db.execute(
             select(OutboxMessage)
@@ -130,7 +126,7 @@ class OutboxProducer:
         msg = result.scalar_one_or_none()
         if msg:
             msg.status = OutboxStatusEnum.PROCESSING
-            msg.last_attempted_at = datetime.utcnow()
+            msg.last_attempted_at = datetime.now(UTC)
             await self.db.commit()
             await self.db.refresh(msg)
         return msg
@@ -138,8 +134,8 @@ class OutboxProducer:
     async def mark_sent(
         self,
         outbox_id: UUID,
-        external_response: Optional[Dict[str, Any]] = None,
-        external_message_id: Optional[str] = None
+        external_response: dict[str, Any] | None = None,
+        external_message_id: str | None = None
     ) -> OutboxMessage:
         """标记消息为已发送"""
         result = await self.db.execute(
@@ -159,7 +155,7 @@ class OutboxProducer:
         self,
         outbox_id: UUID,
         error: str,
-        retry_delay_seconds: Optional[int] = None
+        retry_delay_seconds: int | None = None
     ) -> OutboxMessage:
         """
         标记消息为失败
@@ -173,7 +169,7 @@ class OutboxProducer:
 
         msg.retry_count += 1
         msg.last_error = error
-        msg.last_attempted_at = datetime.utcnow()
+        msg.last_attempted_at = datetime.now(UTC)
 
         if msg.retry_count >= msg.max_retries:
             # 超过最大重试次数，移入死信
@@ -185,7 +181,7 @@ class OutboxProducer:
             if retry_delay_seconds is None:
                 # 指数退避: 2^retry_count * 60秒
                 retry_delay_seconds = 2 ** msg.retry_count * 60
-            msg.scheduled_for = datetime.utcnow() + timedelta(seconds=retry_delay_seconds)
+            msg.scheduled_for = datetime.now(UTC) + timedelta(seconds=retry_delay_seconds)
 
         await self.db.commit()
         await self.db.refresh(msg)
@@ -207,20 +203,19 @@ class OutboxProducer:
         )
         self.db.add(dead_letter)
 
-    async def get_outbox_message(self, outbox_id: UUID) -> Optional[OutboxMessage]:
+    async def get_outbox_message(self, outbox_id: UUID) -> OutboxMessage | None:
         """获取Outbox消息"""
         result = await self.db.execute(
             select(OutboxMessage).where(OutboxMessage.id == outbox_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_queue_depth(self, channel_type: Optional[str] = None) -> int:
+    async def get_queue_depth(self, channel_type: str | None = None) -> int:
         """获取队列深度"""
-        query = select(sa.func.count(OutboxMessage.id)).where(
+        query = select(func.count(OutboxMessage.id)).where(
             OutboxMessage.status == OutboxStatusEnum.PENDING
         )
         if channel_type:
             query = query.where(OutboxMessage.channel_type == channel_type)
         result = await self.db.execute(query)
         return result.scalar() or 0
-

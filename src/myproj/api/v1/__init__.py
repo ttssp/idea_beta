@@ -2,11 +2,11 @@
 
 from fastapi import APIRouter
 
-from myproj.api.v1.threads import router as threads_router
+from myproj.api.v1.events import router as events_router
+from myproj.api.v1.messages import router as messages_router
 from myproj.api.v1.principals import router as principals_router
 from myproj.api.v1.relationships import router as relationships_router
-from myproj.api.v1.messages import router as messages_router
-from myproj.api.v1.events import router as events_router
+from myproj.api.v1.threads import router as threads_router
 
 router = APIRouter(prefix="/api/v1", tags=["v1"])
 

@@ -6,13 +6,12 @@ import pytest
 
 from myproj.core.domain.thread import (
     Thread,
-    ThreadId,
-    ThreadStatus,
     ThreadObjective,
+    ThreadStatus,
 )
 from myproj.core.services.state_machine import (
-    ThreadStateMachine,
     StateTransitionError,
+    ThreadStateMachine,
 )
 
 

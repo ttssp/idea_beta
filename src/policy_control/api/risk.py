@@ -4,8 +4,8 @@ Risk API
 
 风险评估API
 """
-from typing import Optional, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 from ..common.types import RiskContext, RiskDecision
@@ -16,11 +16,11 @@ from ..risk.synthesizer import RiskSynthesizer
 class RiskEvaluationRequest:
     thread_id: UUID
     action: UUID  # action_run_id
-    content: Optional[str] = None
-    relationship: Optional[Dict[str, Any]] = None
-    relationship_class: Optional[str] = None
-    action_type: Optional[str] = None
-    historical_data: Optional[Dict[str, Any]] = None
+    content: str | None = None
+    relationship: dict[str, Any] | None = None
+    relationship_class: str | None = None
+    action_type: str | None = None
+    historical_data: dict[str, Any] | None = None
 
 
 class RiskAPI:

@@ -4,7 +4,6 @@ Kill Switch API
 
 熔断管理API
 """
-from typing import List, Optional
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -16,7 +15,7 @@ from ..kill_switch.service import KillSwitchService
 @dataclass
 class ActivateKillSwitchRequest:
     level: KillSwitchLevel
-    level_id: Optional[UUID] = None
+    level_id: UUID | None = None
     reason: str
 
 
@@ -35,8 +34,8 @@ class KillSwitchAPI:
 
     def get_active_kill_switches(
         self,
-        level: Optional[KillSwitchLevel] = None,
-    ) -> List[KillSwitch]:
+        level: KillSwitchLevel | None = None,
+    ) -> list[KillSwitch]:
         """
         GET /kill-switches
 
@@ -65,7 +64,7 @@ class KillSwitchAPI:
         self,
         switch_id: UUID,
         deactivated_by: UUID,
-    ) -> Optional[KillSwitch]:
+    ) -> KillSwitch | None:
         """
         DELETE /kill-switches/{id}
 

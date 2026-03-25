@@ -5,11 +5,10 @@ Unit Tests: Idempotency Manager
 Tests for AR-I01 to AR-I04
 """
 
-import pytest
-import hashlib
-import json
-from unittest.mock import AsyncMock, MagicMock
 from datetime import timedelta
+from unittest.mock import AsyncMock
+
+import pytest
 
 from ...core.idempotency import IdempotencyManager
 

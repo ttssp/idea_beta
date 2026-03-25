@@ -5,14 +5,15 @@ API Dependencies
 FastAPI dependency injection.
 """
 
-from typing import AsyncGenerator
-from fastapi import Depends, HTTPException, Header, Request
+from collections.abc import AsyncGenerator
+
+from fastapi import Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.database import get_db as get_db_session
-from ..core.redis import get_redis
-from ..core.idempotency import IdempotencyManager
 from ..config import settings
+from ..core.database import get_db as get_db_session
+from ..core.idempotency import IdempotencyManager
+from ..core.redis import get_redis
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

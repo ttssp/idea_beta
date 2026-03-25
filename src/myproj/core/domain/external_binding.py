@@ -2,14 +2,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from myproj.core.domain.thread import ThreadId
 from myproj.core.domain.message import MessageId
-
+from myproj.core.domain.thread import ThreadId
 
 # ============================================
 # 值对象 (Value Objects)
@@ -70,19 +69,19 @@ class ExternalBinding(BaseModel):
 
     # 渠道信息
     channel: ChannelType
-    channel_account_id: Optional[str] = Field(None, max_length=255)
+    channel_account_id: str | None = Field(None, max_length=255)
 
     # 外部线程/消息标识
-    external_thread_key: Optional[str] = Field(None, max_length=500)
-    external_message_key: Optional[str] = Field(None, max_length=500)
+    external_thread_key: str | None = Field(None, max_length=500)
+    external_message_key: str | None = Field(None, max_length=500)
 
     # 关联的消息
-    message_id: Optional[MessageId] = None
+    message_id: MessageId | None = None
 
     # 同步状态
     sync_state: SyncState = SyncState.PENDING
-    last_synced_at: Optional[datetime] = None
-    sync_error: Optional[str] = Field(None, max_length=1000)
+    last_synced_at: datetime | None = None
+    sync_error: str | None = Field(None, max_length=1000)
 
     # 方向
     is_inbound: bool = False
@@ -95,15 +94,15 @@ class ExternalBinding(BaseModel):
 
     # 外部数据快照
     external_metadata: dict[str, Any] = Field(default_factory=dict)
-    external_subject: Optional[str] = Field(None, max_length=500)
-    external_sender: Optional[str] = Field(None, max_length=500)
+    external_subject: str | None = Field(None, max_length=500)
+    external_sender: str | None = Field(None, max_length=500)
     external_recipients: list[str] = Field(default_factory=list)
 
     # 时间戳
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    external_created_at: Optional[datetime] = None
-    external_updated_at: Optional[datetime] = None
+    external_created_at: datetime | None = None
+    external_updated_at: datetime | None = None
 
     # 乐观锁
     version: int = 1
@@ -116,8 +115,8 @@ class ExternalBinding(BaseModel):
         cls,
         thread_id: ThreadId,
         external_thread_key: str,
-        external_message_key: Optional[str] = None,
-        message_id: Optional[MessageId] = None,
+        external_message_key: str | None = None,
+        message_id: MessageId | None = None,
         is_inbound: bool = False,
     ) -> "ExternalBinding":
         """创建Email绑定"""
@@ -136,8 +135,8 @@ class ExternalBinding(BaseModel):
         cls,
         thread_id: ThreadId,
         external_thread_key: str,
-        external_message_key: Optional[str] = None,
-        message_id: Optional[MessageId] = None,
+        external_message_key: str | None = None,
+        message_id: MessageId | None = None,
     ) -> "ExternalBinding":
         """创建Calendar绑定"""
         return cls(
@@ -171,7 +170,7 @@ class ExternalBinding(BaseModel):
         self.sync_state = SyncState.SYNCING
         self.updated_at = datetime.utcnow()
 
-    def mark_synced(self, external_updated_at: Optional[datetime] = None) -> None:
+    def mark_synced(self, external_updated_at: datetime | None = None) -> None:
         """标记为已同步"""
         self.sync_state = SyncState.SYNCED
         self.last_synced_at = datetime.utcnow()

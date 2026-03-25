@@ -19,7 +19,7 @@ import {
   cn,
 } from '@/lib/utils';
 import type { Thread } from '@/lib/types/thread';
-import { Users, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface ThreadCardProps {
