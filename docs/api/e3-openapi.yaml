@@ -1,0 +1,574 @@
+
+openapi: 3.0.3
+info:
+  title: E3 - Integration &amp; Action API
+  description: 代理原生通信控制层 - 外部集成与动作执行API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+tags:
+  - name: Actions
+    description: 动作执行相关API
+  - name: Messages
+    description: 消息相关API
+  - name: Ingress
+    description: 入口Webhook API
+  - name: Delivery
+    description: 投递状态API
+
+paths:
+  # ========== Actions API ==========
+  /threads/{thread_id}/actions:prepare:
+    post:
+      tags:
+        - Actions
+      summary: 准备动作（生成ActionRun）
+      description: 规划并准备一个动作，但不立即执行
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Thread ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepareActionRequest'
+      responses:
+        '201':
+          description: Action created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRun'
+        '400':
+          description: Invalid request
+        '404':
+          description: Thread not found
+
+  /threads/{thread_id}/actions:execute:
+    post:
+      tags:
+        - Actions
+      summary: 执行动作
+      description: 执行一个已准备或已批准的动作
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Thread ID
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+          description: 幂等键，用于重复请求去重
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteActionRequest'
+      responses:
+        '202':
+          description: Action execution accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRun'
+        '400':
+          description: Invalid request
+        '404':
+          description: Thread or ActionRun not found
+        '409':
+          description: Action already executed (idempotent response)
+
+  /threads/{thread_id}/actions/{action_id}:cancel:
+    post:
+      tags:
+        - Actions
+      summary: 取消动作
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: action_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Action cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRun'
+        '404':
+          description: Action not found
+        '409':
+          description: Action cannot be cancelled in current state
+
+  /threads/{thread_id}/actions:
+    get:
+      tags:
+        - Actions
+      summary: 查询动作列表
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [created, planned, ready_for_approval, approved, executing, sent, acknowledged, failed_retryable, failed_terminal, cancelled]
+          description: 按状态过滤
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of actions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ActionRun'
+                  total:
+                    type: integer
+
+  # ========== Messages API ==========
+  /threads/{thread_id}/messages:draft:
+    post:
+      tags:
+        - Messages
+      summary: 起草消息（挂载到thread）
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftMessageRequest'
+      responses:
+        '201':
+          description: Message drafted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftedMessage'
+
+  /threads/{thread_id}/messages:send:
+    post:
+      tags:
+        - Messages
+      summary: 发送消息（通过egress）
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '202':
+          description: Message send accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageSendResult'
+
+  # ========== Ingress Webhook API ==========
+  /ingress/email/gmail:
+    post:
+      tags:
+        - Ingress
+      summary: Gmail Webhook入口
+      parameters:
+        - name: X-Gmail-Signature
+          in: header
+          schema:
+            type: string
+          description: Gmail签名
+        - name: X-Gmail-Timestamp
+          in: header
+          schema:
+            type: string
+          description: 时间戳
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GmailWebhookPayload'
+      responses:
+        '202':
+          description: Webhook accepted
+        '403':
+          description: Invalid signature
+
+  /ingress/email/outlook:
+    post:
+      tags:
+        - Ingress
+      summary: Outlook Mail Webhook入口
+      responses:
+        '202':
+          description: Webhook accepted
+
+  /ingress/calendar/google:
+    post:
+      tags:
+        - Ingress
+      summary: Google Calendar Webhook入口
+      responses:
+        '202':
+          description: Webhook accepted
+
+  /ingress/calendar/outlook:
+    post:
+      tags:
+        - Ingress
+      summary: Outlook Calendar Webhook入口
+      responses:
+        '202':
+          description: Webhook accepted
+
+  # ========== Delivery Status API ==========
+  /delivery/status:
+    post:
+      tags:
+        - Delivery
+      summary: 外部回执回调
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryStatusCallback'
+      responses:
+        '200':
+          description: Acknowledged
+
+  /delivery/{delivery_id}/status:
+    get:
+      tags:
+        - Delivery
+      summary: 查询发送状态
+      parameters:
+        - name: delivery_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Delivery status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryStatus'
+
+components:
+  schemas:
+    # ========== Enums ==========
+    ActionType:
+      type: string
+      enum:
+        - send_email
+        - create_calendar_event
+        - update_calendar_event
+        - cancel_calendar_event
+        - send_followup
+
+    ActionRunStatus:
+      type: string
+      enum:
+        - created
+        - planned
+        - ready_for_approval
+        - approved
+        - executing
+        - sent
+        - acknowledged
+        - failed_retryable
+        - failed_terminal
+        - cancelled
+
+    ChannelType:
+      type: string
+      enum:
+        - email
+        - calendar
+        - task
+        - doc
+
+    DeliveryStatusValue:
+      type: string
+      enum:
+        - pending
+        - sent
+        - delivered
+        - opened
+        - bounced
+        - failed
+
+    # ========== Request/Response Schemas ==========
+    PrepareActionRequest:
+      type: object
+      required:
+        - action_type
+        - input_payload
+      properties:
+        action_type:
+          $ref: '#/components/schemas/ActionType'
+        input_payload:
+          type: object
+          description: 动作输入参数
+
+    ExecuteActionRequest:
+      type: object
+      required:
+        - action_run_id
+      properties:
+        action_run_id:
+          type: string
+          format: uuid
+        input_payload:
+          type: object
+          description: 可选的更新输入参数
+
+    DraftMessageRequest:
+      type: object
+      required:
+        - channel_type
+        - subject
+        - body
+      properties:
+        channel_type:
+          $ref: '#/components/schemas/ChannelType'
+        to:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        body:
+          type: string
+        in_reply_to:
+          type: string
+
+    SendMessageRequest:
+      type: object
+      required:
+        - channel_type
+        - to
+        - subject
+        - body
+      properties:
+        channel_type:
+          $ref: '#/components/schemas/ChannelType'
+        to:
+          type: array
+          items:
+            type: string
+        cc:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        body:
+          type: string
+        in_reply_to:
+          type: string
+        references:
+          type: string
+        thread_id:
+          type: string
+          description: 外部Thread ID
+
+    # ========== Data Models ==========
+    ActionRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        thread_id:
+          type: string
+          format: uuid
+        action_type:
+          $ref: '#/components/schemas/ActionType'
+        status:
+          $ref: '#/components/schemas/ActionRunStatus'
+        idempotency_key:
+          type: string
+        input_payload:
+          type: object
+        output_payload:
+          type: object
+          nullable: true
+        risk_decision:
+          type: string
+          nullable: true
+        risk_reason:
+          type: string
+          nullable: true
+        approval_request_id:
+          type: string
+          format: uuid
+          nullable: true
+        retry_count:
+          type: integer
+        max_retries:
+          type: integer
+        last_error:
+          type: string
+          nullable: true
+        external_message_id:
+          type: string
+          nullable: true
+        external_thread_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        scheduled_for:
+          type: string
+          format: date-time
+          nullable: true
+        executed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DraftedMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        thread_id:
+          type: string
+          format: uuid
+        action_run_id:
+          type: string
+          format: uuid
+        channel_type:
+          $ref: '#/components/schemas/ChannelType'
+        subject:
+          type: string
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    MessageSendResult:
+      type: object
+      properties:
+        action_run_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        external_message_id:
+          type: string
+          nullable: true
+
+    DeliveryStatus:
+      type: object
+      properties:
+        delivery_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/DeliveryStatusValue'
+        external_id:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        detail:
+          type: string
+          nullable: true
+
+    # ========== Webhook Payloads ==========
+    GmailWebhookPayload:
+      type: object
+      properties:
+        message:
+          type: object
+          properties:
+            data:
+              type: string
+              description: Base64 encoded data
+            messageId:
+              type: string
+            publishTime:
+              type: string
+        subscription:
+          type: string
+
+    DeliveryStatusCallback:
+      type: object
+      required:
+        - delivery_id
+        - status
+      properties:
+        delivery_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/DeliveryStatusValue'
+        external_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        detail:
+          type: string
+
