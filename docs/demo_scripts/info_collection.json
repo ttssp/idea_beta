@@ -1,0 +1,114 @@
+{
+  "name": "资料收集线程 - 候选人资料收集",
+  "description": "向候选人收集入职前所需资料",
+  "threadObjective": "收集候选人赵六的入职资料：简历（最新版）、作品集、3封推荐信、身份证复印件",
+  "scenario": "招聘场景",
+  "steps": [
+    {
+      "step": 1,
+      "description": "用户创建线程，设置资料收集目标",
+      "threadContext": {
+        "threadId": "thread_info_001",
+        "objective": "收集候选人赵六的入职资料：简历（最新版）、作品集、3封推荐信、身份证复印件",
+        "currentState": "new",
+        "participants": [
+          {
+            "id": "user_001",
+            "name": "HR经理",
+            "role": "owner"
+          },
+          {
+            "id": "candidate_001",
+            "name": "赵六",
+            "email": "zhaoliu@example.com",
+            "role": "external",
+            "relationshipClass": "candidate"
+          }
+        ],
+        "messageHistory": [],
+        "delegationProfile": {
+          "id": "profile_draft_first",
+          "profileName": "draft_first",
+          "allowedActions": ["draft_message", "collect_info"],
+          "escalationRules": ["收到隐私资料时升级"]
+        },
+        "eventLog": []
+      }
+    },
+    {
+      "step": 2,
+      "description": "系统理解目标并生成资料收集计划",
+      "expectedOutput": {
+        "plan": {
+          "objective": "收集入职资料",
+          "steps": [
+            {
+              "id": "list_requirements",
+              "type": "draft_message",
+              "description": "明确需要收集的资料清单"
+            },
+            {
+              "id": "send_request",
+              "type": "send_message",
+              "description": "发送资料请求"
+            },
+            {
+              "id": "wait_reply",
+              "type": "wait",
+              "description": "等待回复"
+            },
+            {
+              "id": "check_received",
+              "type": "collect_info",
+              "description": "检查收到的资料"
+            },
+            {
+              "id": "confirm_or_remind",
+              "type": "draft_message",
+              "description": "确认收到或催办缺项"
+            }
+          ],
+          "confidence": 0.85,
+          "suggestedPack": "info_collection"
+        }
+      }
+    },
+    {
+      "step": 3,
+      "description": "系统生成Checklist",
+      "expectedChecklist": [
+        {
+          "id": "resume",
+          "text": "最新版简历",
+          "required": true,
+          "priority": "high"
+        },
+        {
+          "id": "portfolio",
+          "text": "作品集",
+          "required": true,
+          "priority": "high"
+        },
+        {
+          "id": "references",
+          "text": "3封推荐信",
+          "required": true,
+          "priority": "medium"
+        },
+        {
+          "id": "id_copy",
+          "text": "身份证复印件",
+          "required": true,
+          "priority": "high"
+        }
+      ]
+    }
+  ],
+  "expectedOutcome": "所有资料收集完成并确认",
+  "successCriteria": [
+    "系统正确识别为资料收集场景",
+    "Checklist包含所有要求的资料项",
+    "邮件清晰列出所有要求",
+    "缺项检测准确"
+  ]
+}

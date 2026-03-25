@@ -1,0 +1,121 @@
+{
+  "name": "跟进催办线程 - 供应商报价跟进",
+  "description": "跟进供应商的项目报价，SLA为3天",
+  "threadObjective": "跟进供应商ABC公司的项目报价，截止日期为3月28日，如逾期未回复则语气升级，必要时升级给人工处理",
+  "scenario": "采购场景",
+  "steps": [
+    {
+      "step": 1,
+      "description": "用户创建线程，设置跟进目标和SLA",
+      "threadContext": {
+        "threadId": "thread_follow_001",
+        "objective": "跟进供应商ABC公司的项目报价，截止日期为3月28日，如逾期未回复则语气升级，必要时升级给人工处理",
+        "currentState": "new",
+        "participants": [
+          {
+            "id": "user_001",
+            "name": "采购经理",
+            "role": "owner"
+          },
+          {
+            "id": "vendor_001",
+            "name": "ABC公司销售",
+            "email": "sales@abccorp.example.com",
+            "role": "external",
+            "relationshipClass": "vendor"
+          }
+        ],
+        "messageHistory": [
+          {
+            "id": "msg_001",
+            "timestamp": "2024-03-20T10:00:00Z",
+            "senderId": "user_001",
+            "content": "您好，请提供XX项目的报价，谢谢！",
+            "channel": "email",
+            "authoredMode": "human_authored_human_sent"
+          }
+        ],
+        "delegationProfile": {
+          "id": "profile_approve_to_send",
+          "profileName": "approve_to_send",
+          "allowedActions": ["draft_message", "send_message", "wait"],
+          "maxMessagesPerDay": 2,
+          "escalationRules": ["涉及金额时升级", "语气升级后需要审批"]
+        },
+        "eventLog": []
+      }
+    },
+    {
+      "step": 2,
+      "description": "系统理解目标并生成跟进计划",
+      "expectedOutput": {
+        "plan": {
+          "objective": "跟进供应商报价",
+          "steps": [
+            {
+              "id": "check_status",
+              "type": "collect_info",
+              "description": "检查当前状态和SLA"
+            },
+            {
+              "id": "draft_reminder_friendly",
+              "type": "draft_message",
+              "description": "起草友好提醒（第一级）",
+              "suggestedTemplate": "followup_friendly"
+            },
+            {
+              "id": "send_reminder_1",
+              "type": "send_message",
+              "description": "发送友好提醒"
+            },
+            {
+              "id": "wait_1",
+              "type": "wait",
+              "description": "等待回复（24小时）",
+              "estimatedDelayMinutes": 1440
+            },
+            {
+              "id": "draft_reminder_formal",
+              "type": "draft_message",
+              "description": "起草正式提醒（第二级，语气升级）",
+              "suggestedTemplate": "followup_formal"
+            },
+            {
+              "id": "send_reminder_2",
+              "type": "send_message",
+              "description": "发送正式提醒"
+            },
+            {
+              "id": "wait_2",
+              "type": "wait",
+              "description": "等待回复（48小时）",
+              "estimatedDelayMinutes": 2880
+            },
+            {
+              "id": "escalate_or_escalate",
+              "type": "escalate",
+              "description": "升级给人工处理"
+            }
+          ],
+          "confidence": 0.8,
+          "suggestedPack": "follow_up"
+        }
+      }
+    },
+    {
+      "step": 3,
+      "description": "系统起草第一级友好提醒",
+      "expectedDraft": {
+        "subject": "跟进：XX项目报价",
+        "content": "您好，\n\n想跟进一下关于XX项目的报价。\n\n不知您那边是否方便在3月28日前提供？\n\n如有任何问题，请随时告诉我。\n\n谢谢！\n\n采购经理"
+      }
+    }
+  ],
+  "expectedOutcome": "供应商在SLA内回复报价，或按计划进行语气升级",
+  "successCriteria": [
+    "系统正确识别为跟进催办场景",
+    "计划包含多级跟进策略",
+    "语气升级机制正常",
+    "最终正确升级给人工处理"
+  ]
+}

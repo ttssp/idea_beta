@@ -1,0 +1,162 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-03-24",
+  "testCases": [
+    {
+      "id": "risk_privacy_001",
+      "category": "risk_classifier",
+      "name": "身份证号检测",
+      "description": "检测内容中的身份证号",
+      "input": {
+        "content": "我的身份证号是110101199001011234，请查收"
+      },
+      "expectedOutput": {
+        "tags": ["privacy_exposed"],
+        "overallRiskLevel": "critical",
+        "suggestedAction": "escalate"
+      }
+    },
+    {
+      "id": "risk_privacy_002",
+      "category": "risk_classifier",
+      "name": "银行卡号检测",
+      "description": "检测内容中的银行卡号",
+      "input": {
+        "content": "请转账到6222021234567890123"
+      },
+      "expectedOutput": {
+        "tags": ["privacy_exposed"],
+        "overallRiskLevel": "critical",
+        "suggestedAction": "escalate"
+      }
+    },
+    {
+      "id": "risk_amount_001",
+      "category": "risk_classifier",
+      "name": "金额检测-人民币",
+      "description": "检测内容中的人民币金额",
+      "input": {
+        "content": "这个项目的总费用是¥50000元"
+      },
+      "expectedOutput": {
+        "tags": ["amount_mentioned"],
+        "overallRiskLevel": "medium"
+      }
+    },
+    {
+      "id": "risk_commitment_001",
+      "category": "risk_classifier",
+      "name": "承诺检测",
+      "description": "检测内容中的承诺",
+      "input": {
+        "content": "我保证本周五前一定完成"
+      },
+      "expectedOutput": {
+        "tags": ["commitment_made"],
+        "overallRiskLevel": "high"
+      }
+    },
+    {
+      "id": "risk_conflict_001",
+      "category": "risk_classifier",
+      "name": "冲突检测-投诉",
+      "description": "检测内容中的投诉",
+      "input": {
+        "content": "我对这次的服务非常不满意，要投诉！"
+      },
+      "expectedOutput": {
+        "tags": ["conflict_detected", "negative_emotion"],
+        "overallRiskLevel": "high"
+      }
+    },
+    {
+      "id": "risk_normal_001",
+      "category": "risk_classifier",
+      "name": "正常内容-问候",
+      "description": "正常问候不应该触发风险",
+      "input": {
+        "content": "您好，请问什么时候方便见面？"
+      },
+      "expectedOutput": {
+        "tags": [],
+        "overallRiskLevel": "low",
+        "suggestedAction": "allow"
+      }
+    },
+    {
+      "id": "planner_time_001",
+      "category": "planner",
+      "name": "时间协调场景识别",
+      "description": "识别时间协调场景",
+      "input": {
+        "threadContext": {
+          "threadId": "test_001",
+          "objective": "协调三位面试官和候选人的面试时间",
+          "currentState": "new",
+          "participants": [],
+          "messageHistory": [],
+          "delegationProfile": {
+            "id": "test",
+            "profileName": "draft_first",
+            "allowedActions": [],
+            "escalationRules": []
+          },
+          "eventLog": []
+        }
+      },
+      "expectedOutput": {
+        "suggestedPack": "time_coordination"
+      }
+    },
+    {
+      "id": "planner_info_001",
+      "category": "planner",
+      "name": "资料收集场景识别",
+      "description": "识别资料收集场景",
+      "input": {
+        "threadContext": {
+          "threadId": "test_002",
+          "objective": "收集候选人的简历、作品集和推荐信",
+          "currentState": "new",
+          "participants": [],
+          "messageHistory": [],
+          "delegationProfile": {
+            "id": "test",
+            "profileName": "draft_first",
+            "allowedActions": [],
+            "escalationRules": []
+          },
+          "eventLog": []
+        }
+      },
+      "expectedOutput": {
+        "suggestedPack": "info_collection"
+      }
+    },
+    {
+      "id": "planner_followup_001",
+      "category": "planner",
+      "name": "跟进催办场景识别",
+      "description": "识别跟进催办场景",
+      "input": {
+        "threadContext": {
+          "threadId": "test_003",
+          "objective": "跟进供应商的报价进度",
+          "currentState": "new",
+          "participants": [],
+          "messageHistory": [],
+          "delegationProfile": {
+            "id": "test",
+            "profileName": "draft_first",
+            "allowedActions": [],
+            "escalationRules": []
+          },
+          "eventLog": []
+        }
+      },
+      "expectedOutput": {
+        "suggestedPack": "follow_up"
+      }
+    }
+  ]
+}

@@ -1,0 +1,983 @@
+openapi: 3.0.3
+info:
+  title: E5 - AI/Agent Intelligence Layer API
+  description: |
+    代理原生通信控制层 - AI/Agent智能层接口
+
+    关键原则：LLM参与判断与起草，但真正的执行、状态变更、审批、发送必须落在确定性系统边界内。E5的输出永远是"建议"，最终决策由E1/E2的确定性逻辑执行。
+  version: 1.0.0
+servers:
+  - url: http://localhost:8085
+    description: 本地开发服务器
+
+paths:
+  /health:
+    get:
+      summary: 健康检查
+      tags:
+        - Health
+      responses:
+        '200':
+          description: 服务健康
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: e5-ai-layer
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /ready:
+    get:
+      summary: 就绪检查
+      tags:
+        - Health
+      responses:
+        '200':
+          description: 服务就绪
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  promptLibraryInitialized:
+                    type: boolean
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /ai/plan:
+    post:
+      summary: 生成动作计划
+      description: 基于线程上下文生成完整的动作计划
+      tags:
+        - Planner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanRequest'
+      responses:
+        '200':
+          description: 成功生成计划
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanResponse'
+        '500':
+          description: 计划生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/suggest-next:
+    post:
+      summary: 建议下一步动作
+      description: 基于当前线程状态建议下一步动作
+      tags:
+        - Planner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestNextRequest'
+      responses:
+        '200':
+          description: 成功获取建议
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestNextResponse'
+        '500':
+          description: 建议生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/draft-message:
+    post:
+      summary: 起草消息
+      description: 基于上下文和模板起草消息
+      tags:
+        - Drafter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftMessageRequest'
+      responses:
+        '200':
+          description: 成功生成草稿
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftMessageResponse'
+        '500':
+          description: 草稿生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/generate-time-slots:
+    post:
+      summary: 生成候选时间
+      description: 基于日历信息生成候选时间
+      tags:
+        - Drafter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateTimeSlotsRequest'
+      responses:
+        '200':
+          description: 成功生成候选时间
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateTimeSlotsResponse'
+        '500':
+          description: 时间生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/generate-checklist:
+    post:
+      summary: 生成Checklist
+      description: 基于目标生成Checklist
+      tags:
+        - Drafter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateChecklistRequest'
+      responses:
+        '200':
+          description: 成功生成Checklist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateChecklistResponse'
+        '500':
+          description: Checklist生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/classify-risk:
+    post:
+      summary: 风险分类
+      description: 对内容进行风险分类
+      tags:
+        - Risk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRiskRequest'
+      responses:
+        '200':
+          description: 成功完成风险分类
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyRiskResponse'
+        '500':
+          description: 风险分类失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/summarize-thread:
+    post:
+      summary: 线程摘要生成
+      description: 基于事件日志生成线程摘要
+      tags:
+        - Summary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummarizeThreadRequest'
+      responses:
+        '200':
+          description: 成功生成摘要
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarizeThreadResponse'
+        '500':
+          description: 摘要生成失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # 基础类型
+    ThreadState:
+      type: string
+      enum:
+        - new
+        - planning
+        - active
+        - awaiting_external
+        - awaiting_approval
+        - blocked
+        - paused
+        - escalated
+        - completed
+        - cancelled
+
+    RiskTag:
+      type: string
+      enum:
+        - amount_mentioned
+        - commitment_made
+        - conflict_detected
+        - privacy_exposed
+        - negative_emotion
+        - legal_terms
+        - uncertainty_high
+
+    RiskLevel:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+
+    # 请求/响应
+    PlanRequest:
+      type: object
+      required:
+        - threadContext
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        forceRefresh:
+          type: boolean
+          description: 强制刷新，忽略缓存
+        usePack:
+          type: string
+          description: 指定使用的能力包
+
+    PlanResponse:
+      type: object
+      required:
+        - plan
+        - reasoning
+        - modelUsed
+        - processingTimeMs
+        - cached
+      properties:
+        plan:
+          $ref: '#/components/schemas/ActionPlan'
+        nextSuggestion:
+          $ref: '#/components/schemas/NextActionSuggestion'
+        reasoning:
+          type: string
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+        cached:
+          type: boolean
+
+    SuggestNextRequest:
+      type: object
+      required:
+        - threadContext
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        includeAlternatives:
+          type: boolean
+
+    SuggestNextResponse:
+      type: object
+      required:
+        - suggestion
+        - modelUsed
+        - processingTimeMs
+      properties:
+        suggestion:
+          $ref: '#/components/schemas/NextActionSuggestion'
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+
+    DraftMessageRequest:
+      type: object
+      required:
+        - threadContext
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        templateType:
+          type: string
+          enum:
+            - email_proposal
+            - email_confirmation
+            - email_followup
+            - email_reminder
+        templateVariant:
+          type: string
+          enum:
+            - default
+            - formal
+            - friendly
+        tone:
+          type: string
+          enum:
+            - professional
+            - friendly
+            - concise
+            - detailed
+        length:
+          type: string
+          enum:
+            - short
+            - medium
+            - long
+        specificInstructions:
+          type: string
+        targetRecipient:
+          type: object
+          properties:
+            name:
+              type: string
+            role:
+              type: string
+            relationship:
+              type: string
+
+    DraftMessageResponse:
+      type: object
+      required:
+        - draft
+        - suggestedEdits
+        - modelUsed
+        - processingTimeMs
+      properties:
+        draft:
+          type: object
+          required:
+            - subject
+            - content
+            - contentType
+          properties:
+            subject:
+              type: string
+            content:
+              type: string
+            contentType:
+              type: string
+              enum:
+                - text/plain
+                - text/html
+                - markdown
+        suggestedEdits:
+          type: array
+          items:
+            type: string
+        riskPreview:
+          $ref: '#/components/schemas/RiskClassification'
+        alternatives:
+          type: array
+          items:
+            type: object
+            properties:
+              subject:
+                type: string
+              content:
+                type: string
+              variant:
+                type: string
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+
+    GenerateTimeSlotsRequest:
+      type: object
+      required:
+        - threadContext
+        - participants
+        - timeRangeStart
+        - timeRangeEnd
+        - meetingDurationMinutes
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        participants:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - name
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              email:
+                type: string
+              busySlots:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - startTime
+                    - endTime
+                  properties:
+                    startTime:
+                      type: string
+                      format: date-time
+                    endTime:
+                      type: string
+                      format: date-time
+        timeRangeStart:
+          type: string
+          format: date-time
+        timeRangeEnd:
+          type: string
+          format: date-time
+        meetingDurationMinutes:
+          type: number
+        preferredTimeOfDay:
+          type: string
+          enum:
+            - morning
+            - afternoon
+            - any
+        excludeDays:
+          type: array
+          items:
+            type: number
+            description: 0=Sunday, 6=Saturday
+        maxSlots:
+          type: number
+
+    GenerateTimeSlotsResponse:
+      type: object
+      required:
+        - slots
+        - reasoning
+        - processingTimeMs
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+        recommendedSlot:
+          $ref: '#/components/schemas/TimeSlot'
+        reasoning:
+          type: string
+        processingTimeMs:
+          type: number
+
+    TimeSlot:
+      type: object
+      required:
+        - id
+        - startTime
+        - endTime
+        - allParticipantsAvailable
+        - availabilityConfidence
+      properties:
+        id:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        allParticipantsAvailable:
+          type: boolean
+        availabilityConfidence:
+          type: number
+        conflicts:
+          type: array
+          items:
+            type: string
+
+    GenerateChecklistRequest:
+      type: object
+      required:
+        - threadContext
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        checklistType:
+          type: string
+          enum:
+            - document_collection
+            - meeting_prep
+            - onboarding
+
+    GenerateChecklistResponse:
+      type: object
+      required:
+        - checklist
+        - reasoning
+        - modelUsed
+        - processingTimeMs
+      properties:
+        checklist:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+        reasoning:
+          type: string
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+
+    ChecklistItem:
+      type: object
+      required:
+        - id
+        - text
+        - required
+        - priority
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        required:
+          type: boolean
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        description:
+          type: string
+
+    ClassifyRiskRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        contextType:
+          type: string
+          enum:
+            - email
+            - message
+            - draft
+            - plan
+
+    ClassifyRiskResponse:
+      type: object
+      required:
+        - classification
+        - modelUsed
+        - processingTimeMs
+        - cached
+      properties:
+        classification:
+          $ref: '#/components/schemas/RiskClassification'
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+        cached:
+          type: boolean
+
+    SummarizeThreadRequest:
+      type: object
+      required:
+        - threadContext
+      properties:
+        threadContext:
+          $ref: '#/components/schemas/ThreadContext'
+        summaryLength:
+          type: string
+          enum:
+            - short
+            - medium
+            - long
+        includeKeyDecisions:
+          type: boolean
+        highlightRiskPoints:
+          type: boolean
+
+    SummarizeThreadResponse:
+      type: object
+      required:
+        - summary
+        - modelUsed
+        - processingTimeMs
+      properties:
+        summary:
+          type: object
+          required:
+            - title
+            - overview
+            - currentStatus
+            - nextSteps
+          properties:
+            title:
+              type: string
+            overview:
+              type: string
+            currentStatus:
+              type: string
+            nextSteps:
+              type: array
+              items:
+                type: string
+            keyDecisions:
+              type: array
+              items:
+                type: string
+            riskPoints:
+              type: array
+              items:
+                type: string
+        modelUsed:
+          type: string
+        processingTimeMs:
+          type: number
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - requestId
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+        requestId:
+          type: string
+
+    # 核心数据结构
+    ThreadContext:
+      type: object
+      required:
+        - threadId
+        - objective
+        - currentState
+        - participants
+        - messageHistory
+        - delegationProfile
+        - eventLog
+      properties:
+        threadId:
+          type: string
+        objective:
+          type: string
+        currentState:
+          $ref: '#/components/schemas/ThreadState'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        messageHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        delegationProfile:
+          $ref: '#/components/schemas/DelegationProfile'
+        eventLog:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreadEvent'
+        metadata:
+          type: object
+
+    Participant:
+      type: object
+      required:
+        - id
+        - name
+        - role
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - owner
+            - participant
+            - external
+        relationshipClass:
+          type: string
+          enum:
+            - internal
+            - candidate
+            - client
+            - vendor
+            - personal
+
+    Message:
+      type: object
+      required:
+        - id
+        - timestamp
+        - senderId
+        - content
+        - channel
+        - authoredMode
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        senderId:
+          type: string
+        content:
+          type: string
+        channel:
+          type: string
+          enum:
+            - email
+            - internal
+            - calendar
+        authoredMode:
+          type: string
+          enum:
+            - human_authored_human_sent
+            - agent_drafted_human_sent
+            - agent_drafted_human_approved_sent
+            - agent_sent_within_policy
+
+    DelegationProfile:
+      type: object
+      required:
+        - id
+        - profileName
+        - allowedActions
+        - escalationRules
+      properties:
+        id:
+          type: string
+        profileName:
+          type: string
+          enum:
+            - observe_only
+            - draft_first
+            - approve_to_send
+            - bounded_auto
+            - human_only
+        allowedActions:
+          type: array
+          items:
+            type: string
+        maxMessagesPerDay:
+          type: number
+        escalationRules:
+          type: array
+          items:
+            type: string
+
+    ThreadEvent:
+      type: object
+      required:
+        - id
+        - eventType
+        - actor
+        - payload
+        - occurredAt
+      properties:
+        id:
+          type: string
+        eventType:
+          type: string
+          enum:
+            - thread_created
+            - message_sent
+            - message_received
+            - action_executed
+            - approval_requested
+            - approval_resolved
+            - state_changed
+            - escalated
+            - takeover
+        actor:
+          type: string
+        payload:
+          type: object
+        occurredAt:
+          type: string
+          format: date-time
+        causalRef:
+          type: string
+
+    ActionPlan:
+      type: object
+      required:
+        - objective
+        - steps
+        - confidence
+      properties:
+        objective:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionStep'
+        estimatedDuration:
+          type: string
+        risks:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: number
+        suggestedPack:
+          type: string
+
+    ActionStep:
+      type: object
+      required:
+        - id
+        - type
+        - description
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - draft_message
+            - send_message
+            - wait
+            - collect_info
+            - escalate
+            - schedule_calendar
+        description:
+          type: string
+        dependencies:
+          type: array
+          items:
+            type: string
+        suggestedTemplate:
+          type: string
+        requiresApproval:
+          type: boolean
+        estimatedDelayMinutes:
+          type: number
+
+    NextActionSuggestion:
+      type: object
+      required:
+        - action
+        - reasoning
+        - urgency
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionStep'
+        reasoning:
+          type: string
+        urgency:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        alternatives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionStep'
+
+    RiskClassification:
+      type: object
+      required:
+        - tags
+        - confidence
+        - overallRiskLevel
+        - reasoning
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskTag'
+        confidence:
+          type: object
+          additionalProperties:
+            type: number
+        overallRiskLevel:
+          $ref: '#/components/schemas/RiskLevel'
+        reasoning:
+          type: string
+        suggestedAction:
+          type: string
+          enum:
+            - allow
+            - draft_only
+            - require_approval
+            - escalate
+            - deny
+        ruleMatches:
+          type: array
+          items:
+            type: string
+        modelUsed:
+          type: string
+
+tags:
+  - name: Health
+    description: 健康检查接口
+  - name: Planner
+    description: Planner相关接口 - 目标理解、动作计划生成
+  - name: Drafter
+    description: Drafter相关接口 - 消息起草、时间生成、Checklist
+  - name: Risk
+    description: Risk相关接口 - 风险分类
+  - name: Summary
+    description: Summary相关接口 - 线程摘要生成

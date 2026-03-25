@@ -18,5 +18,48 @@ services:
       timeout: 5s
       retries: 5
 
+  e5:
+    build:
+      context: .
+      dockerfile: Dockerfile.e5
+    container_name: agent-comm-e5
+    ports:
+      - "8085:8085"
+    environment:
+      NODE_ENV: development
+      E5_PORT: "8085"
+      E5_HOST: 0.0.0.0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      E5_DEFAULT_MODEL: ${E5_DEFAULT_MODEL:-gpt-4o}
+      E5_FALLBACK_MODEL: ${E5_FALLBACK_MODEL:-gpt-4o-mini}
+      E5_CACHE_ENABLED: ${E5_CACHE_ENABLED:-true}
+      E5_REDIS_URL: redis://redis:6379
+      E5_LOG_LEVEL: ${E5_LOG_LEVEL:-info}
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-comm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
 volumes:
   postgres_data:
+  redis_data:
