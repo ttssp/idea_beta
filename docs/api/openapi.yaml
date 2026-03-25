@@ -1,0 +1,517 @@
+
+openapi: 3.0.3
+info:
+  title: Policy &amp; Control API
+  version: 1.0.0
+  description: 代理原生通信控制层 - 策略与控制模块API
+
+paths:
+  /delegation-profiles:
+    get:
+      summary: 查询所有可用委托档位
+      tags:
+        - Delegation
+      parameters:
+        - name: include_system
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 成功返回档位列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DelegationProfile'
+
+  /threads/{threadId}/delegation-profile:
+    post:
+      summary: 设置线程委托档位
+      tags:
+        - Delegation
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profileId
+              properties:
+                profileId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: 设置成功
+
+  /relationships/{relationshipId}/delegation-profile:
+    post:
+      summary: 设置关系默认委托档位
+      tags:
+        - Delegation
+      parameters:
+        - name: relationshipId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profileId
+              properties:
+                profileId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: 设置成功
+
+  /policy/evaluate:
+    post:
+      summary: 策略评估（内部API）
+      tags:
+        - Policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyEvaluationRequest'
+      responses:
+        '200':
+          description: 评估结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyEvaluationResponse'
+
+  /approvals:
+    get:
+      summary: 查询待审批列表
+      tags:
+        - Approval
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, MODIFIED, TAKEN_OVER, CANCELLED, TIMEOUT]
+        - name: threadId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: 审批列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApprovalRequest'
+
+  /approvals/{approvalId}:
+    get:
+      summary: 查询审批详情
+      tags:
+        - Approval
+      parameters:
+        - name: approvalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 审批详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '404':
+          description: 审批请求不存在
+
+  /approvals/{approvalId}:resolve:
+    post:
+      summary: 审批操作
+      tags:
+        - Approval
+      parameters:
+        - name: approvalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [APPROVE, REJECT, MODIFY, TAKEOVER]
+                modifiedContent:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+
+  /risk/evaluate:
+    post:
+      summary: 风险评估（内部API）
+      tags:
+        - Risk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskEvaluationRequest'
+      responses:
+        '200':
+          description: 风险评估结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+
+  /kill-switches:
+    post:
+      summary: 激活熔断
+      tags:
+        - KillSwitch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - level
+                - reason
+              properties:
+                level:
+                  type: string
+                  enum: [GLOBAL, PROFILE, THREAD]
+                levelId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+      responses:
+        '201':
+          description: 熔断已激活
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KillSwitch'
+    get:
+      summary: 查询当前生效的熔断
+      tags:
+        - KillSwitch
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [GLOBAL, PROFILE, THREAD]
+      responses:
+        '200':
+          description: 熔断列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KillSwitch'
+
+  /kill-switches/{switchId}:
+    delete:
+      summary: 解除熔断
+      tags:
+        - KillSwitch
+      parameters:
+        - name: switchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 熔断已解除
+
+  /threads/{threadId}/decision-trace:
+    get:
+      summary: 查询线程决策追踪
+      tags:
+        - DecisionTrace
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: 决策追踪记录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DecisionTrace'
+
+components:
+  schemas:
+    Decision:
+      type: string
+      enum: [allow, draft_only, require_approval, bounded_execution, escalate_to_human, deny]
+
+    DelegationProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        profileLevel:
+          type: string
+          enum: [observe_only, draft_first, approve_to_send, bounded_auto, human_only]
+        allowedActions:
+          type: array
+          items:
+            type: string
+        budgetConfig:
+          type: object
+        escalationRules:
+          type: object
+        isSystemDefined:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PolicyEvaluationRequest:
+      type: object
+      required:
+        - threadId
+        - action
+      properties:
+        threadId:
+          type: string
+          format: uuid
+        action:
+          type: string
+        relationshipClass:
+          type: string
+        threadObjective:
+          type: string
+        threadStatus:
+          type: string
+        additionalContext:
+          type: object
+
+    PolicyEvaluationResponse:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/Decision'
+        reason:
+          type: string
+        matchedRules:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+
+    ApprovalRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threadId:
+          type: string
+          format: uuid
+        actionRunId:
+          type: string
+          format: uuid
+        requestType:
+          type: string
+          enum: [message_send, action_execute, budget_increase]
+        reasonCode:
+          type: string
+        reasonDescription:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, modified, taken_over, cancelled, timeout]
+        preview:
+          type: object
+        resolution:
+          type: object
+        resolvedAt:
+          type: string
+          format: date-time
+        timeoutAt:
+          type: string
+          format: date-time
+        timeoutAction:
+          type: string
+          enum: [escalate, deny, auto_approve]
+        createdAt:
+          type: string
+          format: date-time
+
+    RiskEvaluationRequest:
+      type: object
+      required:
+        - threadId
+        - action
+      properties:
+        threadId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          format: uuid
+        content:
+          type: string
+        relationship:
+          type: object
+        relationshipClass:
+          type: string
+        actionType:
+          type: string
+        historicalData:
+          type: object
+
+    RiskEvaluationResponse:
+      type: object
+      properties:
+        overallRiskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        relationshipRisk:
+          type: integer
+        actionRisk:
+          type: integer
+        contentRisk:
+          type: integer
+        consequenceRisk:
+          type: integer
+        riskFactors:
+          type: array
+          items:
+            type: string
+        recommendation:
+          $ref: '#/components/schemas/Decision'
+        reason:
+          type: string
+
+    KillSwitch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        level:
+          type: string
+          enum: [global, profile, thread]
+        levelId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        isActive:
+          type: boolean
+        activatedAt:
+          type: string
+          format: date-time
+        deactivatedAt:
+          type: string
+          format: date-time
+
+    DecisionTrace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threadId:
+          type: string
+          format: uuid
+        actionRunId:
+          type: string
+          format: uuid
+        decision:
+          $ref: '#/components/schemas/Decision'
+        decisionReason:
+          type: string
+        steps:
+          type: array
+          items:
+            type: object
+        policyHits:
+          type: array
+          items:
+            type: object
+        riskAssessmentId:
+          type: string
+          format: uuid
+        killSwitchAffected:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
