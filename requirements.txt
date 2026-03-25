@@ -1,0 +1,19 @@
+
+# Policy &amp; Control Module Dependencies
+
+# Core
+python&gt;=3.9
+
+# Web Framework (optional, for API)
+# fastapi&gt;=0.100.0
+# uvicorn&gt;=0.23.0
+# pydantic&gt;=2.0.0
+
+# Database (optional, for persistence)
+# sqlalchemy&gt;=2.0.0
+# psycopg2-binary&gt;=2.9.0
+# alembic&gt;=1.12.0
+
+# Utilities
+# python-json-logger&gt;=2.0.0
+# structlog&gt;=23.0.0
