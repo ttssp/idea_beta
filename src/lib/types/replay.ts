@@ -1,0 +1,42 @@
+import type { Principal } from './thread';
+
+export type ThreadEventType =
+  | 'message'
+  | 'action'
+  | 'decision'
+  | 'state_change'
+  | 'approval'
+  | 'takeover'
+  | 'external_reply';
+
+export interface DecisionTrace {
+  relationshipRisk: string;
+  actionRisk: string;
+  contentRisk: string;
+  consequenceRisk: string;
+  finalDecision: string;
+  policyRulesHit: string[];
+  confidence: number;
+}
+
+export interface ThreadEvent {
+  id: string;
+  threadId: string;
+  eventType: ThreadEventType;
+  actor: Principal;
+  payload: Record<string, any>;
+  occurredAt: string;
+  causalRef?: string;
+  decisionTrace?: DecisionTrace;
+  description: string;
+}
+
+export const THREAD_EVENT_TYPE_LABELS: Record<ThreadEventType, string> = {
+  message: '消息',
+  action: '动作',
+  decision: '决策',
+  state_change: '状态变更',
+  approval: '审批',
+  takeover: '接管',
+  external_reply: '外部回复',
+};
