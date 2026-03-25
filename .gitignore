@@ -1,9 +1,13 @@
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -52,9 +56,17 @@ logs/
 .coverage
 .coverage.*
 htmlcov/
+htmlcov/
+.tox/
 
 # Alembic
 alembic/versions/*.pyc
+
+# Celery
+celerybeat-schedule
+
+# Docker
+docker-compose.override.yml
 
 # OS
 .DS_Store
@@ -64,3 +76,6 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+*.bak
+*.cache
+

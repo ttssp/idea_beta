@@ -1,0 +1,5 @@
+
+"""
+Outbox/Inbox Pattern Module
+"""
+
