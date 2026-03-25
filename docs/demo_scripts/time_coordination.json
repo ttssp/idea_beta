@@ -1,0 +1,115 @@
+{
+  "name": "时间协调线程 - 终面时间协调",
+  "description": "协调3位面试官和候选人的终面时间",
+  "threadObjective": "协调张三、李四、王五三位面试官与候选人赵六的终面时间，时间范围在2024年3月25日至4月5日之间，会议时长60分钟",
+  "scenario": "招聘场景",
+  "steps": [
+    {
+      "step": 1,
+      "description": "用户创建线程，设置目标和参与者",
+      "threadContext": {
+        "threadId": "thread_time_001",
+        "objective": "协调张三、李四、王五三位面试官与候选人赵六的终面时间，时间范围在2024年3月25日至4月5日之间，会议时长60分钟",
+        "currentState": "new",
+        "participants": [
+          {
+            "id": "user_001",
+            "name": "用户",
+            "role": "owner"
+          },
+          {
+            "id": "interviewer_001",
+            "name": "张三",
+            "email": "zhangsan@example.com",
+            "role": "participant",
+            "relationshipClass": "internal"
+          },
+          {
+            "id": "interviewer_002",
+            "name": "李四",
+            "email": "lisi@example.com",
+            "role": "participant",
+            "relationshipClass": "internal"
+          },
+          {
+            "id": "interviewer_003",
+            "name": "王五",
+            "email": "wangwu@example.com",
+            "role": "participant",
+            "relationshipClass": "internal"
+          },
+          {
+            "id": "candidate_001",
+            "name": "赵六",
+            "email": "zhaoliu@example.com",
+            "role": "external",
+            "relationshipClass": "candidate"
+          }
+        ],
+        "messageHistory": [],
+        "delegationProfile": {
+          "id": "profile_draft_first",
+          "profileName": "draft_first",
+          "allowedActions": ["draft_message", "collect_info"],
+          "escalationRules": ["涉及金额时升级", "涉及承诺时升级"]
+        },
+        "eventLog": []
+      }
+    },
+    {
+      "step": 2,
+      "description": "系统理解目标并生成初始动作计划",
+      "expectedOutput": {
+        "plan": {
+          "objective": "协调终面时间",
+          "steps": [
+            {
+              "id": "collect_calendars",
+              "type": "collect_info",
+              "description": "收集所有参与者的日历可用时间"
+            },
+            {
+              "id": "generate_slots",
+              "type": "draft_message",
+              "description": "生成候选时间提议",
+              "suggestedTemplate": "time_proposal"
+            },
+            {
+              "id": "send_proposal",
+              "type": "send_message",
+              "description": "发送时间提议"
+            },
+            {
+              "id": "wait_reply",
+              "type": "wait",
+              "description": "等待回复"
+            },
+            {
+              "id": "confirm_or_adjust",
+              "type": "draft_message",
+              "description": "确认最终时间或提出调整"
+            }
+          ],
+          "estimatedDuration": "3-5天",
+          "confidence": 0.85,
+          "suggestedPack": "time_coordination"
+        }
+      }
+    },
+    {
+      "step": 3,
+      "description": "系统起草时间提议邮件",
+      "expectedDraft": {
+        "subject": "关于终面时间的提议",
+        "content": "赵六您好，\n\n感谢您进入终面环节！\n\n我们建议以下几个时间供您选择：\n\n1. 3月26日（周二）10:00-11:00\n2. 3月27日（周三）14:00-15:00\n3. 3月28日（周四）11:00-12:00\n\n请您看看哪个时间比较合适？如果以上时间都不方便，请告知您的可用时间。\n\n期待您的回复！\n\n谢谢，\n招聘团队"
+      }
+    }
+  ],
+  "expectedOutcome": "所有参与者确认时间，日历事件创建成功",
+  "successCriteria": [
+    "系统正确识别为时间协调场景",
+    "生成的计划包含5个关键步骤",
+    "邮件起草专业且信息完整",
+    "最终时间得到所有参与者确认"
+  ]
+}

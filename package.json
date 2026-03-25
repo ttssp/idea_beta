@@ -1,0 +1,50 @@
+{
+  "name": "agent-comm-control-e5",
+  "version": "1.0.0",
+  "description": "E5 - AI/Agent Intelligence Layer for Agent-Native Communication Control",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/e5/api/app.ts",
+    "build": "tsc",
+    "start": "node dist/e5/api/app.js",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "setup": "bash scripts/setup.sh",
+    "health": "bash scripts/health-check.sh",
+    "docker:build": "docker build -f Dockerfile.e5 -t agent-comm-e5 .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.32.0",
+    "@langchain/core": "^0.1.0",
+    "@langchain/openai": "^0.0.0",
+    "fastify": "^4.25.0",
+    "zod": "^3.22.0",
+    "winston": "^3.11.0",
+    "ioredis": "^5.3.0",
+    "openai": "^4.20.0",
+    "@anthropic-ai/sdk": "^0.18.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.6.0",
+    "vitest": "^1.1.0",
+    "supertest": "^6.3.0",
+    "prettier": "^3.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "E5 - AI/Agent Engineer",
+  "license": "MIT"
+}
