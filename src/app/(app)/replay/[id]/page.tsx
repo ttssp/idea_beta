@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -12,13 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
-interface ReplayDetailPageProps {
-  params: { id: string };
-}
-
-export default function ReplayDetailPage({ params }: ReplayDetailPageProps) {
-  const thread = mockThreads.find((t) => t.id === params.id);
-  const events = mockReplayEvents.filter((e) => e.threadId === params.id);
+export default function ReplayDetailPage() {
+  const params = useParams<{ id: string }>();
+  const threadId = typeof params.id === 'string' ? params.id : '';
+  const thread = mockThreads.find((t) => t.id === threadId);
+  const events = mockReplayEvents.filter((e) => e.threadId === threadId);
 
   if (!thread) {
     notFound();

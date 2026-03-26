@@ -1,7 +1,7 @@
 """Thread 领域模型 - 系统一等公民"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -31,7 +31,7 @@ class ThreadId(BaseModel):
         return hash(self.value)
 
 
-class ThreadStatus(str, Enum):
+class ThreadStatus(StrEnum):
     """Thread 状态枚举 - 10种状态"""
     NEW = "new"
     PLANNING = "planning"
@@ -50,7 +50,7 @@ class ThreadStatus(str, Enum):
         return status in {cls.COMPLETED, cls.CANCELLED}
 
 
-class DelegationLevel(str, Enum):
+class DelegationLevel(StrEnum):
     """委托档位"""
     OBSERVE_ONLY = "observe_only"
     DRAFT_FIRST = "draft_first"
@@ -59,7 +59,7 @@ class DelegationLevel(str, Enum):
     HUMAN_ONLY = "human_only"
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """风险等级"""
     LOW = "low"
     MEDIUM = "medium"

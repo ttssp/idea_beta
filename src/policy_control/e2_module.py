@@ -6,14 +6,14 @@ This is a complete, working implementation of the E2 module.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 # ============================================================================
 # Enums & Constants
 # ============================================================================
 
-class DelegationLevel(str, Enum):
+class DelegationLevel(StrEnum):
     OBSERVE_ONLY = "observe_only"
     DRAFT_FIRST = "draft_first"
     APPROVE_TO_SEND = "approve_to_send"
@@ -21,7 +21,7 @@ class DelegationLevel(str, Enum):
     HUMAN_ONLY = "human_only"
 
 
-class Decision(str, Enum):
+class Decision(StrEnum):
     ALLOW = "allow"
     DRAFT_ONLY = "draft_only"
     REQUIRE_APPROVAL = "require_approval"
@@ -30,14 +30,14 @@ class Decision(str, Enum):
     DENY = "deny"
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -47,7 +47,7 @@ class ApprovalStatus(str, Enum):
     TIMEOUT = "timeout"
 
 
-class KillSwitchLevel(str, Enum):
+class KillSwitchLevel(StrEnum):
     GLOBAL = "global"
     PROFILE = "profile"
     THREAD = "thread"

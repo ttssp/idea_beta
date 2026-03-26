@@ -6,7 +6,7 @@ install-python:
 	python -m pip install -e ".[dev]"
 
 install-e3:
-	python -m pip install -r backend/e3/requirements.txt
+	python -m pip install -e ".[e3]"
 
 install-node:
 	npm install

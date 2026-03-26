@@ -1,7 +1,7 @@
 """Relationship 领域模型 - 关系语义模型"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -34,7 +34,7 @@ class RelationshipId(BaseModel):
         return hash(self.value)
 
 
-class RelationshipClass(str, Enum):
+class RelationshipClass(StrEnum):
     """关系类别 - 5种核心关系"""
     INTERNAL_COLLEAGUE = "internal_colleague"
     EXTERNAL_CANDIDATE = "external_candidate"
@@ -43,7 +43,7 @@ class RelationshipClass(str, Enum):
     SENSITIVE_PERSONAL = "sensitive_personal"
 
 
-class SensitivityLevel(str, Enum):
+class SensitivityLevel(StrEnum):
     """敏感度等级"""
     LOW = "low"
     MEDIUM = "medium"

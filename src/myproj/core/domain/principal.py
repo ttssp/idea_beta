@@ -1,7 +1,7 @@
 """Principal 领域模型 - 统一主体模型（人/代理/外部方/服务方）"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -31,7 +31,7 @@ class PrincipalId(BaseModel):
         return hash(self.value)
 
 
-class PrincipalType(str, Enum):
+class PrincipalType(StrEnum):
     """主体类型"""
     HUMAN = "human"
     AGENT = "agent"
@@ -39,7 +39,7 @@ class PrincipalType(str, Enum):
     SERVICE = "service"
 
 
-class TrustTier(str, Enum):
+class TrustTier(StrEnum):
     """信任等级"""
     TRUSTED = "trusted"
     KNOWN = "known"
@@ -47,7 +47,7 @@ class TrustTier(str, Enum):
     BLOCKED = "blocked"
 
 
-class DisclosureMode(str, Enum):
+class DisclosureMode(StrEnum):
     """身份披露模式"""
     FULL = "full"
     SEMI = "semi"

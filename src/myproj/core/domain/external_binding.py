@@ -1,7 +1,7 @@
 """ExternalBinding 领域模型 - 外部渠道映射"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -34,7 +34,7 @@ class BindingId(BaseModel):
         return hash(self.value)
 
 
-class ChannelType(str, Enum):
+class ChannelType(StrEnum):
     """外部渠道类型"""
     EMAIL = "email"
     CALENDAR = "calendar"
@@ -44,7 +44,7 @@ class ChannelType(str, Enum):
     CUSTOM = "custom"
 
 
-class SyncState(str, Enum):
+class SyncState(StrEnum):
     """同步状态"""
     PENDING = "pending"
     SYNCING = "syncing"

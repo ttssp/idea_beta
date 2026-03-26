@@ -1,7 +1,7 @@
 """ThreadEvent 领域模型 - 事件流"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -34,7 +34,7 @@ class EventId(BaseModel):
         return hash(self.value)
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     """事件类型"""
     # Thread生命周期
     THREAD_CREATED = "thread_created"

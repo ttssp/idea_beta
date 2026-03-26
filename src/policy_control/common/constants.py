@@ -2,10 +2,10 @@
 """
 Policy & Control Constants and Enums
 """
-from enum import Enum
+from enum import StrEnum
 
 
-class DelegationLevel(str, Enum):
+class DelegationLevel(StrEnum):
     """委托档位定义"""
 
     OBSERVE_ONLY = "observe_only"
@@ -24,7 +24,7 @@ class DelegationLevel(str, Enum):
     """该类关系或场景禁止代理主动介入"""
 
 
-class Decision(str, Enum):
+class Decision(StrEnum):
     """决策输出定义"""
 
     ALLOW = "allow"
@@ -46,7 +46,7 @@ class Decision(str, Enum):
     """拒绝执行"""
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """风险等级定义"""
 
     LOW = "low"
@@ -55,7 +55,7 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     """审批状态定义"""
 
     PENDING = "pending"
@@ -80,7 +80,7 @@ class ApprovalStatus(str, Enum):
     """已超时"""
 
 
-class KillSwitchLevel(str, Enum):
+class KillSwitchLevel(StrEnum):
     """熔断级别定义"""
 
     GLOBAL = "global"
@@ -93,7 +93,7 @@ class KillSwitchLevel(str, Enum):
     """线程熔断"""
 
 
-class PolicyEffect(str, Enum):
+class PolicyEffect(StrEnum):
     """策略效果定义"""
 
     ALLOW = "allow"
@@ -102,7 +102,7 @@ class PolicyEffect(str, Enum):
     ESCALATE = "escalate"
 
 
-class PolicyScope(str, Enum):
+class PolicyScope(StrEnum):
     """策略作用域定义"""
 
     GLOBAL = "global"
@@ -111,7 +111,7 @@ class PolicyScope(str, Enum):
     THREAD = "thread"
 
 
-class RequestType(str, Enum):
+class RequestType(StrEnum):
     """审批请求类型"""
 
     MESSAGE_SEND = "message_send"
@@ -119,7 +119,7 @@ class RequestType(str, Enum):
     BUDGET_INCREASE = "budget_increase"
 
 
-class TimeoutAction(str, Enum):
+class TimeoutAction(StrEnum):
     """超时动作"""
 
     ESCALATE = "escalate"

@@ -1,7 +1,7 @@
 """Message 领域模型 - 消息对象"""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -34,7 +34,7 @@ class MessageId(BaseModel):
         return hash(self.value)
 
 
-class AuthoredMode(str, Enum):
+class AuthoredMode(StrEnum):
     """消息创作/发送模式 - 4种模式"""
     HUMAN_AUTHORED_HUMAN_SENT = "human_authored_human_sent"
     AGENT_DRAFTED_HUMAN_SENT = "agent_drafted_human_sent"
@@ -62,7 +62,7 @@ class AuthoredMode(str, Enum):
         }
 
 
-class ChannelType(str, Enum):
+class ChannelType(StrEnum):
     """渠道类型"""
     INTERNAL = "internal"
     EMAIL = "email"

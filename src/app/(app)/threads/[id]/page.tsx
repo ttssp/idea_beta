@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -16,13 +16,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThreadHeader, ThreadTimeline, ThreadActionBar } from '@/components/thread';
 import { mockThreads, mockReplayEvents } from '@/mocks';
 
-interface ThreadDetailPageProps {
-  params: { id: string };
-}
-
-export default function ThreadDetailPage({ params }: ThreadDetailPageProps) {
-  const thread = mockThreads.find((t) => t.id === params.id);
-  const events = mockReplayEvents.filter((e) => e.threadId === params.id);
+export default function ThreadDetailPage() {
+  const params = useParams<{ id: string }>();
+  const threadId = typeof params.id === 'string' ? params.id : '';
+  const thread = mockThreads.find((t) => t.id === threadId);
+  const events = mockReplayEvents.filter((e) => e.threadId === threadId);
 
   if (!thread) {
     notFound();

@@ -7,13 +7,13 @@ Defines the state machine for ActionRun objects.
 
 from collections.abc import Callable
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from transitions import Machine
 
 
-class ActionRunStatus(str, Enum):
+class ActionRunStatus(StrEnum):
     """ActionRun状态枚举"""
     CREATED = "created"
     PLANNED = "planned"

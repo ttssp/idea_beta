@@ -12,7 +12,7 @@ for the Agent-Native Communication Control Layer.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -20,7 +20,7 @@ from uuid import UUID, uuid4
 # Enums - Core Constants
 # ============================================================================
 
-class DelegationLevel(str, Enum):
+class DelegationLevel(StrEnum):
     """
     委托档位定义
 
@@ -37,7 +37,7 @@ class DelegationLevel(str, Enum):
     HUMAN_ONLY = "human_only"
 
 
-class Decision(str, Enum):
+class Decision(StrEnum):
     """
     决策输出定义
 
@@ -56,7 +56,7 @@ class Decision(str, Enum):
     DENY = "deny"
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     """
     风险等级定义
 
@@ -71,7 +71,7 @@ class RiskLevel(str, Enum):
     CRITICAL = "critical"
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     """
     审批状态定义
 
@@ -92,7 +92,7 @@ class ApprovalStatus(str, Enum):
     TIMEOUT = "timeout"
 
 
-class KillSwitchLevel(str, Enum):
+class KillSwitchLevel(StrEnum):
     """
     熔断级别定义
 
@@ -105,7 +105,7 @@ class KillSwitchLevel(str, Enum):
     THREAD = "thread"
 
 
-class PolicyEffect(str, Enum):
+class PolicyEffect(StrEnum):
     """策略效果定义"""
     ALLOW = "allow"
     DENY = "deny"
@@ -113,7 +113,7 @@ class PolicyEffect(str, Enum):
     ESCALATE = "escalate"
 
 
-class PolicyScope(str, Enum):
+class PolicyScope(StrEnum):
     """策略作用域定义"""
     GLOBAL = "global"
     PROFILE = "profile"
