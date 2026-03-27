@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Clock, Users, Eye, Shield } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import type { ThreadEvent } from '@/lib/types/replay';
 
@@ -48,6 +49,36 @@ export function ReplayTimeline({ events, className }: ReplayTimelineProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {event.senderStack && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Users className="h-3 w-3" />
+                            Sender Stack
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="w-80">
+                          <SenderStackTooltip senderStack={event.senderStack} />
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                  {event.disclosurePreview && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Eye className="h-3 w-3" />
+                            {event.disclosurePreview.resolved_mode}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <DisclosureTooltip preview={event.disclosurePreview} />
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                   <Badge variant="outline" className="text-xs">
                     {event.eventType}
                   </Badge>
@@ -58,6 +89,20 @@ export function ReplayTimeline({ events, className }: ReplayTimelineProps) {
                 </div>
               </div>
             </CardHeader>
+
+            {/* Responsibility Stages */}
+            {event.responsibilityStages && event.responsibilityStages.length > 0 && (
+              <CardContent className="pb-2 pt-0">
+                <div className="flex flex-wrap gap-2">
+                  {event.responsibilityStages.map((stage, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs gap-1">
+                      <Shield className="h-3 w-3" />
+                      {stage.role}: {stage.principal.displayName}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            )}
 
             {event.decisionTrace && (
               <CardContent className="pt-0">
@@ -102,6 +147,94 @@ export function ReplayTimeline({ events, className }: ReplayTimelineProps) {
           </Card>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Tooltip showing sender stack details
+ */
+function SenderStackTooltip({ senderStack }: { senderStack: any }) {
+  return (
+    <div className="space-y-2">
+      <p className="font-medium text-sm">Sender Stack</p>
+      <div className="space-y-1">
+        {senderStack.owner && (
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-[10px]">OWNER</Badge>
+            <span>{senderStack.owner.display_name}</span>
+          </div>
+        )}
+        {senderStack.delegate && (
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-[10px]">DELEGATE</Badge>
+            <span>{senderStack.delegate.display_name}</span>
+          </div>
+        )}
+        {senderStack.author && (
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-[10px]">AUTHOR</Badge>
+            <span>{senderStack.author.display_name}</span>
+          </div>
+        )}
+        {senderStack.approver && (
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-[10px]">APPROVER</Badge>
+            <span>{senderStack.approver.display_name}</span>
+          </div>
+        )}
+        {senderStack.executor && (
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className="text-[10px]">EXECUTOR</Badge>
+            <span>{senderStack.executor.display_name}</span>
+          </div>
+        )}
+      </div>
+      {senderStack.authority_label && (
+        <p className="text-xs text-muted-foreground">
+          Authority: {senderStack.authority_label}
+        </p>
+      )}
+      {senderStack.representation_note && (
+        <p className="text-xs text-muted-foreground">
+          Note: {senderStack.representation_note}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Tooltip showing disclosure preview details
+ */
+function DisclosureTooltip({ preview }: { preview: any }) {
+  return (
+    <div className="space-y-2">
+      <p className="font-medium text-sm">Disclosure Preview</p>
+      <div className="space-y-1 text-xs">
+        <div>
+          <span className="text-muted-foreground">Mode:</span>{' '}
+          <span className="font-medium">{preview.resolved_mode}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Visible Fields:</span>{' '}
+          {preview.visible_fields?.length > 0 ? (
+            <span>{preview.visible_fields.join(', ')}</span>
+          ) : (
+            <span className="text-muted-foreground">None</span>
+          )}
+        </div>
+        <div>
+          <span className="text-muted-foreground">Requires Notice:</span>{' '}
+          <span>{preview.requires_recipient_notice ? 'Yes' : 'No'}</span>
+        </div>
+        {preview.rendered_text && (
+          <div>
+            <span className="text-muted-foreground">Template:</span>{' '}
+            <span className="line-clamp-2">{preview.rendered_text}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

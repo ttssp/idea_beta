@@ -1,0 +1,11 @@
+{
+  "policy_id": "99999999-9999-9999-9999-999999999999",
+  "rendered_text": "Sent on behalf of Alicia with scheduling assistance from her delegate agent.",
+  "requires_recipient_notice": true,
+  "resolved_mode": "semi",
+  "visible_fields": [
+    "owner",
+    "delegate",
+    "author"
+  ]
+}

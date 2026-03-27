@@ -11,6 +11,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...action_runtime.contract_adapter import (
+    ActionEnvelopeAdapter,
+    ExecutionResultEmitter,
+)
 from ...action_runtime.engine import ActionRunEngine
 from ...action_runtime.models import ActionRun
 from ...core.idempotency import IdempotencyManager
@@ -212,5 +216,158 @@ def _action_run_to_dict(action_run: ActionRun) -> dict[str, Any]:
         "updated_at": action_run.updated_at.isoformat() if action_run.updated_at else None,
         "scheduled_for": action_run.scheduled_for.isoformat() if action_run.scheduled_for else None,
         "executed_at": action_run.executed_at.isoformat() if action_run.executed_at else None,
+    }
+
+
+# ============================================
+# ActionEnvelope Endpoints (New Contract)
+# ============================================
+
+
+@router.post("/envelope")
+async def submit_action_envelope(
+    thread_id: UUID,
+    envelope_data: dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    idempotency: IdempotencyManager = Depends(get_idempotency_manager),
+) -> dict[str, Any]:
+    """
+    Submit an ActionEnvelope for execution.
+
+    This is the new contract-aligned endpoint that accepts a shared ActionEnvelope
+    and processes it according to the execution_mode specified.
+    """
+    try:
+        # Validate the envelope
+        envelope = ActionEnvelopeAdapter.validate_envelope(envelope_data)
+
+        # Verify thread_id matches
+        if envelope.thread.thread_id != thread_id:
+            raise HTTPException(
+                status_code=400,
+                detail="thread_id in path must match envelope.thread.thread_id"
+            )
+
+        # Use envelope's idempotency key if provided, otherwise generate
+        idempotency_key = envelope.idempotency_key
+        if not idempotency_key:
+            idempotency_key = idempotency.generate_key(
+                "envelope",
+                thread_id,
+                envelope.action_type,
+                envelope.envelope_id,
+            )
+
+        # Check idempotency
+        can_proceed, previous_result = await idempotency.check_and_set(idempotency_key)
+        if not can_proceed and previous_result:
+            import json
+            return json.loads(previous_result)
+
+        # Convert envelope to action input
+        action_input = ActionEnvelopeAdapter.envelope_to_action_input(envelope)
+
+        # Create ActionRun
+        engine = ActionRunEngine(db, idempotency)
+        action_run = await engine.create_action_run(
+            thread_id=thread_id,
+            action_type=envelope.action_type,
+            input_payload=action_input,
+            idempotency_key=idempotency_key,
+        )
+
+        # Set up result emitter for replay events
+        emitter = ExecutionResultEmitter(envelope, action_run.id)
+
+        # Plan the action
+        action_run = await engine.plan_action(action_run.id)
+        emitter.emit_planned({"action_input": action_input})
+
+        from ...action_runtime.state_machine import ActionRunStatus
+        from myproj.core.contracts.actions import ActionExecutionMode
+
+        # Handle based on execution mode
+        if envelope.execution_mode == ActionExecutionMode.PREPARE_ONLY:
+            # Just prepare, don't execute
+            pass
+
+        elif envelope.execution_mode == ActionExecutionMode.EXECUTE_IMMEDIATELY:
+            # Execute immediately
+            if action_run.status == ActionRunStatus.PLANNED:
+                if envelope.risk_posture.requires_approval:
+                    action_run = await engine.submit_for_approval(action_run.id)
+                    emitter.emit_approval_required(envelope.risk_posture.summary or "Approval required by policy")
+                else:
+                    # Auto-approve if no approval required
+                    action_run = await engine.approve(action_run.id)
+                    emitter.emit_executing()
+                    action_run = await engine.start_execution(action_run.id)
+                    action_run = await engine.mark_send_success(
+                        action_run.id,
+                        output_payload={"status": "executed_via_envelope"}
+                    )
+                    emitter.emit_sent()
+                    action_run = await engine.acknowledge(action_run.id)
+                    emitter.emit_acknowledged()
+                    emitter.emit_completed({"status": "success"})
+
+        elif envelope.execution_mode == ActionExecutionMode.EXECUTE_AFTER_APPROVAL:
+            # Submit for approval
+            action_run = await engine.submit_for_approval(action_run.id)
+            emitter.emit_approval_required(envelope.risk_posture.summary or "Waiting for explicit approval")
+
+        # Build result
+        result = {
+            "action_run": _action_run_to_dict(action_run),
+            "envelope_id": str(envelope.envelope_id),
+            "replay_events": emitter.get_events(),
+        }
+
+        # Store idempotent result
+        import json
+        await idempotency.store_result(idempotency_key, json.dumps(result))
+
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{action_id}/replay-events")
+async def get_replay_events(
+    thread_id: UUID,
+    action_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Get replay-friendly events for an action run.
+
+    This endpoint returns execution events in a format that can be
+    consumed by the core system's replay functionality.
+    """
+    engine = ActionRunEngine(db)
+
+    action_run = await engine.get_action_run(action_id)
+    if not action_run:
+        raise HTTPException(status_code=404, detail="ActionRun not found")
+
+    if action_run.thread_id != thread_id:
+        raise HTTPException(status_code=400, detail="ActionRun does not belong to this thread")
+
+    # Extract replay events from status history
+    # In a full implementation, this would query the status history table
+    replay_events = [
+        {
+            "action_run_id": str(action_run.id),
+            "status": action_run.status,
+            "output_payload": action_run.output_payload,
+            "error": action_run.last_error,
+        }
+    ]
+
+    return {
+        "action_run_id": str(action_run.id),
+        "thread_id": str(thread_id),
+        "replay_events": replay_events,
     }
 

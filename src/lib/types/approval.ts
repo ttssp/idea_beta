@@ -1,4 +1,5 @@
 import type { Thread } from './thread';
+import type { SenderStack, DisclosurePreview } from './contracts';
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'modified' | 'takeover';
 
@@ -22,6 +23,9 @@ export interface ApprovalRequest {
   createdAt: string;
   resolvedAt?: string;
   thread?: Thread;
+  // Sender stack and disclosure for approval visibility
+  senderStack?: SenderStack;
+  disclosurePreview?: DisclosurePreview;
 }
 
 export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {

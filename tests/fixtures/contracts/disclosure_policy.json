@@ -1,0 +1,46 @@
+{
+  "allow_hidden_only_for_internal_low_risk": true,
+  "default_mode": "semi",
+  "metadata": {},
+  "mode_configs": [
+    {
+      "mode": "full",
+      "requires_recipient_notice": true,
+      "visible_fields": [
+        "owner",
+        "delegate",
+        "author",
+        "approver",
+        "executor",
+        "authority_source"
+      ]
+    },
+    {
+      "mode": "semi",
+      "requires_recipient_notice": true,
+      "visible_fields": [
+        "owner",
+        "delegate",
+        "author"
+      ]
+    },
+    {
+      "mode": "template",
+      "requires_recipient_notice": true,
+      "visible_fields": [
+        "owner",
+        "delegate"
+      ]
+    },
+    {
+      "mode": "hidden",
+      "requires_recipient_notice": false,
+      "visible_fields": []
+    }
+  ],
+  "policy_id": "99999999-9999-9999-9999-999999999999",
+  "require_at_least_semi_for_external": true,
+  "require_full_for_high_risk": true,
+  "require_full_for_sensitive_relationships": true,
+  "template_text": null
+}

@@ -1,0 +1,14 @@
+{
+  "decision_id": "c0b8aa82-6ce5-420a-b3d6-6646a40228d5",
+  "disposition": "approval_required",
+  "due_at": null,
+  "metadata": {},
+  "notify_now": true,
+  "reason_code": "approval_gate",
+  "related_action_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "related_thread_id": "66666666-6666-6666-6666-666666666666",
+  "requires_human_action": true,
+  "summary": "This interview scheduling message requires human approval before send.",
+  "suppress_until": null,
+  "target_principal_id": "11111111-1111-1111-1111-111111111111"
+}

@@ -1,4 +1,5 @@
 import type { Principal } from './thread';
+import type { SenderStack, DisclosurePreview } from './contracts';
 
 export type ThreadEventType =
   | 'message'
@@ -19,6 +20,16 @@ export interface DecisionTrace {
   confidence: number;
 }
 
+/**
+ * Responsibility stage for replay timeline
+ * Shows which part of the sender stack was active at this event
+ */
+export interface ResponsibilityStage {
+  role: 'owner' | 'delegate' | 'author' | 'approver' | 'executor';
+  principal: Principal;
+  action: string;
+}
+
 export interface ThreadEvent {
   id: string;
   threadId: string;
@@ -29,6 +40,10 @@ export interface ThreadEvent {
   causalRef?: string;
   decisionTrace?: DecisionTrace;
   description: string;
+  // Sender stack and responsibility tracking for replay
+  senderStack?: SenderStack;
+  disclosurePreview?: DisclosurePreview;
+  responsibilityStages?: ResponsibilityStage[];
 }
 
 export const THREAD_EVENT_TYPE_LABELS: Record<ThreadEventType, string> = {

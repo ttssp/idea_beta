@@ -2,7 +2,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, ShieldAlert } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { Clock, ShieldAlert, Users, Eye } from 'lucide-react';
 import {
   APPROVAL_REQUEST_TYPE_LABELS,
   APPROVAL_STATUS_LABELS,
@@ -39,6 +41,18 @@ export function ApprovalCard({ approval, className, onClick }: ApprovalCardProps
               >
                 {APPROVAL_STATUS_LABELS[approval.status]}
               </Badge>
+              {approval.senderStack && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Users className="h-3 w-3" />
+                  Sender Stack
+                </Badge>
+              )}
+              {approval.disclosurePreview && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Eye className="h-3 w-3" />
+                  {approval.disclosurePreview.resolved_mode}
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">{approval.reasonDescription}</p>
           </div>
@@ -50,6 +64,47 @@ export function ApprovalCard({ approval, className, onClick }: ApprovalCardProps
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
+          {/* Sender Stack Display */}
+          {approval.senderStack && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Sender Stack</p>
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="text-[10px]">OWNER</Badge>
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="text-[10px]">
+                      {approval.senderStack.owner.display_name?.charAt(0) || 'O'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs">{approval.senderStack.owner.display_name}</span>
+                </div>
+                {approval.senderStack.delegate && (
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-[10px]">DELEGATE</Badge>
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="text-[10px]">
+                        {approval.senderStack.delegate.display_name?.charAt(0) || 'D'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs">{approval.senderStack.delegate.display_name}</span>
+                  </div>
+                )}
+                {approval.senderStack.author && (
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-[10px]">AUTHOR</Badge>
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="text-[10px]">
+                        {approval.senderStack.author.display_name?.charAt(0) || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs">{approval.senderStack.author.display_name}</span>
+                  </div>
+                )}
+              </div>
+              <Separator />
+            </div>
+          )}
+
           {approval.threadId && (
             <p className="text-sm">
               <span className="text-muted-foreground">线程：</span>

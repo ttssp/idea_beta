@@ -1,0 +1,115 @@
+{
+  "action_label": "Send candidate scheduling proposal",
+  "action_type": "send_message",
+  "approval_request_id": "88888888-8888-8888-8888-888888888888",
+  "disclosure_preview": {
+    "policy_id": "99999999-9999-9999-9999-999999999999",
+    "rendered_text": "Sent on behalf of Alicia with scheduling assistance from her delegate agent.",
+    "requires_recipient_notice": true,
+    "resolved_mode": "semi",
+    "visible_fields": [
+      "owner",
+      "delegate",
+      "author"
+    ]
+  },
+  "envelope_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "execution_mode": "execute_after_approval",
+  "idempotency_key": "thread-66666666-send-message-1",
+  "metadata": {},
+  "payload": {
+    "content": "Here are three scheduling windows that work on our side.",
+    "content_type": "text/plain"
+  },
+  "relationships": {
+    "is_sensitive": false,
+    "relationship_classes": [
+      "candidate"
+    ],
+    "relationship_ids": [
+      "77777777-7777-7777-7777-777777777777"
+    ]
+  },
+  "risk_posture": {
+    "reason_codes": [
+      "external_send",
+      "candidate_thread"
+    ],
+    "requires_approval": true,
+    "risk_level": "medium",
+    "summary": "External candidate communication requires human approval."
+  },
+  "sender_stack": {
+    "approver": {
+      "affiliation_id": null,
+      "affiliation_name": null,
+      "display_name": "Alicia Chen",
+      "is_human_controlled": true,
+      "metadata": {},
+      "principal_id": "33333333-3333-3333-3333-333333333333",
+      "principal_kind": "human"
+    },
+    "author": {
+      "affiliation_id": null,
+      "affiliation_name": null,
+      "display_name": "Alicia Scheduling Agent",
+      "is_human_controlled": false,
+      "metadata": {},
+      "principal_id": "22222222-2222-2222-2222-222222222222",
+      "principal_kind": "personal_agent"
+    },
+    "authority_label": "candidate_scheduling_policy_v1",
+    "authority_source": "55555555-5555-5555-5555-555555555555",
+    "delegate": {
+      "affiliation_id": null,
+      "affiliation_name": null,
+      "display_name": "Alicia Scheduling Agent",
+      "is_human_controlled": false,
+      "metadata": {},
+      "principal_id": "22222222-2222-2222-2222-222222222222",
+      "principal_kind": "personal_agent"
+    },
+    "disclosure_mode": "semi",
+    "executor": {
+      "affiliation_id": null,
+      "affiliation_name": "Acme Talent",
+      "display_name": "Org Mail Delivery Agent",
+      "is_human_controlled": false,
+      "metadata": {},
+      "principal_id": "44444444-4444-4444-4444-444444444444",
+      "principal_kind": "organization_agent"
+    },
+    "metadata": {},
+    "owner": {
+      "affiliation_id": null,
+      "affiliation_name": null,
+      "display_name": "Alicia Chen",
+      "is_human_controlled": true,
+      "metadata": {},
+      "principal_id": "11111111-1111-1111-1111-111111111111",
+      "principal_kind": "human"
+    },
+    "representation_note": null
+  },
+  "target": {
+    "channel": "email",
+    "metadata": {},
+    "recipient_handles": [
+      "candidate@example.com"
+    ],
+    "recipient_ids": [],
+    "subject": "Interview scheduling options"
+  },
+  "thread": {
+    "objective": "Coordinate final-round interview times",
+    "participant_ids": [
+      "11111111-1111-1111-1111-111111111111",
+      "77777777-7777-7777-7777-777777777777"
+    ],
+    "relationship_ids": [
+      "77777777-7777-7777-7777-777777777777"
+    ],
+    "thread_id": "66666666-6666-6666-6666-666666666666",
+    "thread_status": "awaiting_approval"
+  }
+}
