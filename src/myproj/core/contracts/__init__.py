@@ -1,0 +1,90 @@
+"""Communication OS shared contracts."""
+
+from myproj.core.contracts.actions import (
+    ActionEnvelope,
+    ActionExecutionMode,
+    ActionTarget,
+    ChannelKind,
+    RelationshipContextRef,
+    RiskPosture,
+    ThreadContextRef,
+)
+from myproj.core.contracts.attention import AttentionDecision, AttentionDisposition
+from myproj.core.contracts.authority import (
+    AuthorityGrant,
+    AuthorityGrantStatus,
+    RelationshipScope,
+    ThreadScope,
+)
+from myproj.core.contracts.common import (
+    ActorRef,
+    ContractModel,
+    DelegationMode,
+    PrincipalKind,
+    RiskLevel,
+)
+from myproj.core.contracts.disclosure import (
+    DisclosureField,
+    DisclosureMode,
+    DisclosureModeConfig,
+    DisclosurePolicy,
+    DisclosurePreview,
+)
+from myproj.core.contracts.examples import (
+    ACTION_ENVELOPE_EXAMPLE,
+    ACTION_ENVELOPE_PAYLOAD,
+    ATTENTION_DECISION_EXAMPLE,
+    ATTENTION_DECISION_PAYLOAD,
+    AUTHORITY_GRANT_EXAMPLE,
+    AUTHORITY_GRANT_PAYLOAD,
+    AUTHORITY_SEMANTICS_CHEAT_SHEET,
+    DISCLOSURE_POLICY_EXAMPLE,
+    DISCLOSURE_POLICY_PAYLOAD,
+    DISCLOSURE_PREVIEW_EXAMPLE,
+    DISCLOSURE_PREVIEW_PAYLOAD,
+    FIELD_NAMING_RULES,
+    SENDER_STACK_EXAMPLE,
+    SENDER_STACK_PAYLOAD,
+)
+from myproj.core.contracts.sender_stack import SenderStack
+
+__all__ = [
+    "ACTION_ENVELOPE_EXAMPLE",
+    "ACTION_ENVELOPE_PAYLOAD",
+    "ATTENTION_DECISION_EXAMPLE",
+    "ATTENTION_DECISION_PAYLOAD",
+    "AUTHORITY_GRANT_EXAMPLE",
+    "AUTHORITY_GRANT_PAYLOAD",
+    "AUTHORITY_SEMANTICS_CHEAT_SHEET",
+    "ActionEnvelope",
+    "ActionExecutionMode",
+    "ActionTarget",
+    "ActorRef",
+    "AttentionDecision",
+    "AttentionDisposition",
+    "AuthorityGrant",
+    "AuthorityGrantStatus",
+    "ChannelKind",
+    "ContractModel",
+    "DISCLOSURE_POLICY_EXAMPLE",
+    "DISCLOSURE_POLICY_PAYLOAD",
+    "DISCLOSURE_PREVIEW_EXAMPLE",
+    "DISCLOSURE_PREVIEW_PAYLOAD",
+    "DisclosureField",
+    "DisclosureMode",
+    "DisclosureModeConfig",
+    "DisclosurePolicy",
+    "DisclosurePreview",
+    "DelegationMode",
+    "FIELD_NAMING_RULES",
+    "PrincipalKind",
+    "RelationshipContextRef",
+    "RelationshipScope",
+    "RiskLevel",
+    "RiskPosture",
+    "SENDER_STACK_EXAMPLE",
+    "SENDER_STACK_PAYLOAD",
+    "SenderStack",
+    "ThreadContextRef",
+    "ThreadScope",
+]
