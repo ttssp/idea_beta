@@ -86,9 +86,11 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       <div className="border-t p-4">
-        <Button className="w-full gap-2">
-          <Plus className="h-4 w-4" />
-          New Thread
+        <Button className="w-full gap-2" asChild>
+          <Link href="/threads/new">
+            <Plus className="h-4 w-4" />
+            New Thread
+          </Link>
         </Button>
       </div>
     </div>

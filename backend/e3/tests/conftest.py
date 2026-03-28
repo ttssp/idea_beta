@@ -3,6 +3,19 @@
 Test Configuration
 """
 
+import sys
+from pathlib import Path
+
+# Add project roots to path for imports
+backend_dir = Path(__file__).parent.parent
+project_root = backend_dir.parent
+src_dir = project_root / "src"
+
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
+
 import asyncio
 from datetime import UTC, datetime
 from uuid import uuid4

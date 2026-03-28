@@ -20,7 +20,7 @@ from myproj.core.contracts.common import RiskLevel, ActorRef, PrincipalKind
 from myproj.core.contracts.disclosure import DisclosurePreview, DisclosureMode
 from myproj.core.contracts.sender_stack import SenderStack
 
-from backend.e3.action_runtime.contract_adapter import (
+from e3.action_runtime.contract_adapter import (
     ActionEnvelopeAdapter,
     ExecutionResultEmitter,
 )

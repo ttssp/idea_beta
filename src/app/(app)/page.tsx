@@ -1,9 +1,9 @@
 'use client';
 
 import { ThreadBucket } from '@/components/thread/ThreadBucket';
-import { mockThreads } from '@/mocks';
+import { useThreads } from '@/lib/hooks/useThread';
 import type { Thread, ThreadStatus } from '@/lib/types/thread';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -52,7 +52,16 @@ function groupThreadsByBucket(threads: Thread[]) {
 }
 
 export default function ThreadInboxPage() {
-  const buckets = groupThreadsByBucket(mockThreads);
+  const { data: threads = [], isLoading } = useThreads();
+  const buckets = groupThreadsByBucket(threads);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

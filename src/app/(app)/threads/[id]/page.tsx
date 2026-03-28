@@ -3,7 +3,7 @@
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   DELEGATION_PROFILE_LABELS,
@@ -14,17 +14,29 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThreadHeader, ThreadTimeline, ThreadActionBar } from '@/components/thread';
-import { mockThreads, mockReplayEvents } from '@/mocks';
+import { useThread, useThreadEvents } from '@/lib/hooks/useThread';
+import { mockReplayEvents } from '@/mocks';
 
 export default function ThreadDetailPage() {
   const params = useParams<{ id: string }>();
   const threadId = typeof params.id === 'string' ? params.id : '';
-  const thread = mockThreads.find((t) => t.id === threadId);
-  const events = mockReplayEvents.filter((e) => e.threadId === threadId);
+  const { data: thread, isLoading } = useThread(threadId);
+  const { data: events = [] } = useThreadEvents(threadId);
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!thread) {
     notFound();
   }
+
+  // Fallback to mock events if no events returned
+  const displayEvents = events.length > 0 ? events : mockReplayEvents.filter((e) => e.threadId === threadId);
 
   return (
     <div className="h-full flex flex-col">
@@ -101,7 +113,7 @@ export default function ThreadDetailPage() {
               <CardTitle className="text-base">时间线</CardTitle>
             </CardHeader>
             <CardContent>
-              <ThreadTimeline events={events} />
+              <ThreadTimeline events={displayEvents} />
             </CardContent>
           </Card>
         </div>
@@ -109,3 +121,4 @@ export default function ThreadDetailPage() {
     </div>
   );
 }
+
